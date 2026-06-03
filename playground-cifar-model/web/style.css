@@ -613,11 +613,10 @@ body[data-screen="cinic"] .stat-row { margin: 0 0 14px; }
   .guess-sub { display: none; }
   .confbar { margin-top: 0; height: 5px; flex: 1 0 100%; }
 
-  /* LE DESSIN D'ABORD : toute la largeur ET toute la hauteur restante.
-     Canvas en absolu : il epouse exactement la carte (un % de hauteur dans
-     du flex ne se resout pas de maniere fiable -> il restait carre). */
+  /* LE DESSIN D'ABORD : carre pleine largeur (largeur x largeur).
+     Canvas en absolu : il epouse exactement la carte. */
   body[data-screen="picto"] .draw-card {
-    order: 3; flex: 1 1 200px; min-height: 160px; width: 100%;
+    order: 3; flex: 0 0 auto; width: 100%; aspect-ratio: 1;
     margin: 0; padding: 6px; position: relative;
   }
   body[data-screen="picto"] .draw-card canvas {
