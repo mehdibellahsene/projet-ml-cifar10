@@ -153,12 +153,10 @@ async function fetchRound(n) {
   return (await res.json()).images;
 }
 
-/* ---------------- theme ---------------- */
-function setTheme(v) {
-  document.documentElement.setAttribute("data-theme", v);
+/* ---------------- theme (fixe : cahier) ---------------- */
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", "cahier");
   document.documentElement.style.setProperty("--juice", String(window.__juice));
-  localStorage.setItem("mlp_theme_v2", v);
-  document.querySelectorAll(".theme-switch button").forEach((b) => b.classList.toggle("on", b.dataset.t === v));
 }
 
 /* ---------------- shell + routeur ---------------- */
@@ -174,8 +172,7 @@ function wireHome(scope) { const c = scope.querySelector("#crumbHome"); if (c) c
 function renderShell() {
   const root = $("root");
   root.innerHTML =
-    `<div class="theme-switch">${THEMES.map((t) => `<button data-t="${t.v}">${t.l}</button>`).join("")}</div>
-     <div class="wrap">
+    `<div class="wrap">
        <header class="topbar">
          <h1 class="wordmark" id="wordmark"><span class="logo" style="background:transparent;box-shadow:none;transform:none">${mascot("happy", 56, true)}</span> ML Playground</h1>
          <p class="subtitle">${TXT.subtitle}</p>
@@ -184,7 +181,6 @@ function renderShell() {
        <div class="foot"><span>EfficientNet-B5 &middot; projet ML CIFAR-10 &middot; BELLAHSENE Mehdi Redha</span><span>10 categories &middot; ~97,9 % en test</span></div>
      </div>`;
   $("wordmark").onclick = () => go("home");
-  document.querySelectorAll(".theme-switch button").forEach((b) => (b.onclick = () => setTheme(b.dataset.t)));
 }
 
 function go(name) {
@@ -375,8 +371,9 @@ function startPicto(s) {
   refreshPalette();
 
   $("pBrush").oninput = (e) => { P.size = +e.target.value; $("pSizeL").textContent = P.size; };
+  function nextWord() { let w; do { w = pick(CLASSES); } while (w === P.word); P.word = w; $("pWord").textContent = FR[w]; clearCanvas(); }
   $("pClear").onclick = () => clearCanvas();
-  $("pNew").onclick = () => { let w; do { w = pick(CLASSES); } while (w === P.word); P.word = w; $("pWord").textContent = FR[w]; clearCanvas(); };
+  $("pNew").onclick = nextWord;
   $("pWord").textContent = FR[P.word];
 
   const canvas = $("pCanvas");
@@ -435,6 +432,7 @@ function startPicto(s) {
         $("pSub").textContent = "Cette fois il a trouve !";
         $("pConf").style.background = "linear-gradient(90deg,var(--p-mint),var(--accent))";
         const c = centerOf(canvas); fireConfetti(c.x, c.y, { count: 120 });
+        setTimeout(nextWord, 1800); // mot suivant automatique
       } else {
         setMood("idle");
         $("pGuess").innerHTML = `<span>&laquo; ${FR[pred.label]} &raquo; ?</span>`;
@@ -510,5 +508,5 @@ function startCinic(s) {
 
 /* ---------------- init ---------------- */
 renderShell();
-setTheme(localStorage.getItem("mlp_theme_v2") || "cahier");
+applyTheme();
 go("home");
