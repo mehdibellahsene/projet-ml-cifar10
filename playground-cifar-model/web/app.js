@@ -654,6 +654,8 @@ function startPicto(s) {
   $("pWord").textContent = FR[P.word];
   $("pName").value = localStorage.getItem("mlp_name") || "";
   $("pName").oninput = () => { const v = $("pName").value.trim(); if (v) localStorage.setItem("mlp_name", v); };
+  // mobile : si le pseudo est deja connu, on ne l'affiche pas (gagne de la place)
+  if ($("pName").value.trim()) s.querySelector(".p-name").classList.add("has-name");
 
   // chrono stressant (centiemes de seconde) : demarre avec chaque mot, s'arrete quand trouve
   function startSW() {
@@ -802,8 +804,9 @@ function startPicto(s) {
             if (r.category_first) msg = `Champion de « ${FR[word]} » !`;
             if (r.rank != null) msg += ` Top 10 (${gradeFor(r.rank)})`;
             $("pRecord").innerHTML = `<span class="ok">${msg}</span>`;
+            toast(msg);   // visible aussi quand le panneau pseudo est masque (mobile)
           })
-          .catch((e) => { $("pRecord").innerHTML = `<span class="ko">${e.message}</span>`; });
+          .catch((e) => { $("pRecord").innerHTML = `<span class="ko">${e.message}</span>`; toast(e.message); });
         setTimeout(nextWord, 2400);
       } else {
         setMood("idle");

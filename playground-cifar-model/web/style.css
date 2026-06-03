@@ -568,7 +568,8 @@ body[data-screen="cinic"] .stat-row { margin: 0 0 14px; }
   .screen-head { margin: 2px 0 10px; gap: 10px; }
   .screen-title { font-size: 22px; }
   .crumb { padding: 7px 12px; font-size: 13px; }
-  .picto-head { margin: 0 auto 12px; }
+  .picto-head { margin: 0 auto 8px !important; font-size: 14px !important; }
+  .picto-head .prompt-chip { font-size: 15px !important; padding: 3px 10px !important; }
 
   /* duel compact */
   .duel-bar { margin-bottom: 8px; gap: 10px; }
@@ -599,19 +600,31 @@ body[data-screen="cinic"] .stat-row { margin: 0 0 14px; }
   .p-name #pRecord { flex-basis: 100%; margin-top: 0 !important; min-height: 0 !important; }
   .p-name #pRecord:empty { display: none; }
   .p-hint { display: none; }
-  .p-guess { order: 2; padding: 8px 14px; }
-  .guess-stage { margin-bottom: 0; }
+  .p-name.has-name { display: none; }   /* pseudo deja connu -> on ne le montre pas */
+
+  /* devinette compacte : chrono + mot sur une ligne, barre fine dessous */
+  .p-guess { order: 2; padding: 6px 12px; }
+  .guess-stage { margin-bottom: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 3px 10px; text-align: left; }
   #pMascot { display: none; }
-  .stopwatch { font-size: 22px; }
-  .guess-word { font-size: 19px; min-height: 24px; }
-  .guess-sub { font-size: 12px; margin-top: 0; }
-  .confbar { margin-top: 6px; height: 8px; }
+  .stopwatch { font-size: 17px; flex: 0 0 auto; }
+  .guess-word { font-size: 15px; min-height: 0; flex: 1; }
+  .guess-sub { display: none; }
+  .confbar { margin-top: 0; height: 5px; flex: 1 0 100%; }
+
+  /* LE DESSIN D'ABORD : le canvas prend toute la place restante */
   body[data-screen="picto"] .draw-card {
-    order: 3; flex: 1 1 140px; min-height: 100px; width: auto; max-width: 100%;
-    margin: 0; padding: 8px; display: flex; justify-content: center;
+    order: 3; flex: 1 1 200px; min-height: 160px; width: auto; max-width: 100%;
+    margin: 0; padding: 6px; display: flex; justify-content: center;
   }
   body[data-screen="picto"] .draw-card canvas { width: auto; height: 100%; max-width: 100%; }
-  .p-tools { order: 4; padding: 10px 14px; }
-  .p-tools .field-label { display: none; }   /* gagne de la place : icones explicites */
-  .p-tools .toolrow { margin-top: 8px !important; }
+
+  /* outils mini : couleurs reduites sur une ligne, boutons icones seules */
+  .p-tools { order: 4; padding: 8px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .p-tools .field-label { display: none; }
+  .p-tools .palette { flex: 1 0 100%; gap: 6px; flex-wrap: nowrap; }
+  .p-tools .palette .swatch { width: 26px; height: 26px; }
+  .p-tools .toolrow { margin-top: 0 !important; gap: 6px; flex: 0 0 auto; flex-wrap: nowrap; }
+  .p-tools .btn { font-size: 0 !important; padding: 10px 12px !important; flex: 0 0 auto !important; }
+  .p-tools .btn svg { margin-right: 0 !important; vertical-align: middle !important; }
+  .p-tools input[type="range"] { flex: 1 1 50px; min-width: 46px; width: auto !important; margin: 0; }
 }
