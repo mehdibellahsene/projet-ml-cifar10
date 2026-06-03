@@ -157,7 +157,7 @@ async function fetchRound(n) {
 function setTheme(v) {
   document.documentElement.setAttribute("data-theme", v);
   document.documentElement.style.setProperty("--juice", String(window.__juice));
-  localStorage.setItem("mlp_theme", v);
+  localStorage.setItem("mlp_theme_v2", v);
   document.querySelectorAll(".theme-switch button").forEach((b) => b.classList.toggle("on", b.dataset.t === v));
 }
 
@@ -510,5 +510,5 @@ function startCinic(s) {
 
 /* ---------------- init ---------------- */
 renderShell();
-setTheme(localStorage.getItem("mlp_theme") || "tableau");
+setTheme(localStorage.getItem("mlp_theme_v2") || "cahier");
 go("home");
