@@ -160,12 +160,13 @@ const gradeFor = (i) => GRADES[Math.min(i, GRADES.length - 1)];
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 async function fetchLeaderboard() {
-  try { const r = await fetch("/api/leaderboard"); if (!r.ok) return { duel: [], picto: [] }; return r.json(); }
-  catch { return { duel: [], picto: [] }; }
+  const empty = { duel: [], picto_fastest: [], picto_by_cat: {} };
+  try { const r = await fetch("/api/leaderboard"); if (!r.ok) return empty; return r.json(); }
+  catch { return empty; }
 }
-async function postScore(game, name, score, image) {
+async function postScore(payload) {
   const r = await fetch("/api/score", { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ game, name, score, image: image || null }) });
+    body: JSON.stringify(payload) });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || "Erreur d'enregistrement"); }
   return r.json();
 }
@@ -181,7 +182,7 @@ function renderSubmit(container, game, score, image) {
     const name = (inp.value || "").trim() || "Anonyme";
     localStorage.setItem("mlp_name", name); btn.disabled = true; inp.disabled = true;
     try {
-      const r = await postScore(game, name, score, image);
+      const r = await postScore({ game, name, score });
       res.innerHTML = r.rank != null
         ? `<span class="ok">Classe !</span> Note <b>${gradeFor(r.rank)}</b> &middot; #${r.rank + 1} du top`
         : `Pas dans le top 10 cette fois — retente !`;
@@ -189,15 +190,33 @@ function renderSubmit(container, game, score, image) {
   };
   btn.onclick = send; inp.onkeydown = (e) => { if (e.key === "Enter") send(); };
 }
-function lbTable(title, ic, entries, withImg) {
+function lbDuel(entries) {
+  const rows = entries.length
+    ? entries.map((e, i) => `<tr><td><span class="lb-grade g${gradeFor(i)[0]}">${gradeFor(i)}</span></td>
+        <td class="nm">${esc(e.name)}</td><td class="sc">${e.score} pts</td></tr>`).join("")
+    : `<tr><td colspan="3" class="lb-empty">Aucun score — sois le premier !</td></tr>`;
+  return `<div class="lb-card"><h3><span class="ti">${icon("duel", 15)}</span>${TXT.duelName}</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
+}
+function lbFastest(entries) {
   const rows = entries.length
     ? entries.map((e, i) => `<tr>
         <td><span class="lb-grade g${gradeFor(i)[0]}">${gradeFor(i)}</span></td>
-        ${withImg ? `<td>${e.image ? `<img src="${e.image}" alt="" style="width:36px;height:36px;border-radius:8px;image-rendering:pixelated;vertical-align:middle;border:1px solid var(--hairline)">` : ""}</td>` : ""}
-        <td class="nm">${esc(e.name)}</td>
-        <td class="sc">${e.score}</td></tr>`).join("")
-    : `<tr><td colspan="${withImg ? 4 : 3}" class="lb-empty">Aucun score — sois le premier !</td></tr>`;
-  return `<div class="lb-card"><h3><span class="ti">${icon(ic, 15)}</span>${title}</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
+        <td>${e.image ? `<img class="lb-thumb" src="${e.image}" alt="">` : ""}</td>
+        <td class="nm">${esc(e.name)}<div class="lb-sub">${FR[e.category] || ""}</div></td>
+        <td class="sc">${Number(e.time).toFixed(2)} s</td></tr>`).join("")
+    : `<tr><td colspan="4" class="lb-empty">Aucun dessin — sois le premier !</td></tr>`;
+  return `<div class="lb-card"><h3><span class="ti">${icon("brush", 15)}</span>${TXT.pictoName} — top 10 rapides</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
+}
+function lbByCat(byCat) {
+  const cells = CLASSES.map((c) => {
+    const e = byCat[c];
+    return `<div class="cat-cell">
+      <div class="cat-pic">${e && e.image ? `<img src="${e.image}" alt="">` : `<span class="cat-empty">?</span>`}</div>
+      <div class="cat-name">${FR[c]}</div>
+      <div class="cat-meta">${e ? `${esc(e.name)} &middot; ${Number(e.time).toFixed(2)} s` : "libre"}</div>
+    </div>`;
+  }).join("");
+  return `<div class="lb-card" style="margin-top:22px"><h3><span class="ti">${icon("brush", 15)}</span>Champions par categorie</h3><div class="cat-grid">${cells}</div></div>`;
 }
 
 /* ---------------- theme (fixe : cahier) ---------------- */
@@ -253,11 +272,12 @@ function renderHome(s) {
       ${card("var(--p-pink)", "brush", TXT.pictoName, TXT.pictoTag, "picto")}
       ${card("var(--p-mint)", "scope", TXT.cinicName, TXT.cinicTag, "cinic")}
     </div>
-    <div id="lbWrap" class="lb-wrap"></div></div>`;
+    <div id="lbWrap" class="lb-wrap"></div>
+    <div id="lbCat"></div></div>`;
   s.querySelectorAll(".game-card").forEach((c) => (c.onclick = () => go(c.dataset.go)));
   fetchLeaderboard().then((lb) => {
-    const w = $("lbWrap"); if (!w) return;
-    w.innerHTML = lbTable(TXT.duelName, "duel", lb.duel, false) + lbTable(TXT.pictoName, "brush", lb.picto, true);
+    if ($("lbWrap")) $("lbWrap").innerHTML = lbDuel(lb.duel || []) + lbFastest(lb.picto_fastest || []);
+    if ($("lbCat")) $("lbCat").innerHTML = lbByCat(lb.picto_by_cat || {});
   });
 }
 
@@ -398,7 +418,7 @@ function startPicto(s) {
 
   const P = { ctx: null, drawing: false, last: null, color: PALETTE[0], erase: false, size: 8,
               word: pick(CLASSES), guess: null, thinking: false, found: false, pending: false,
-              wordStart: 0, strokes: 0, best: { score: 0, thumb: null } };
+              wordStart: 0, swTimer: null };
 
   $("pictoBody").innerHTML = `
     <p style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px">${TXT.pictoIntro} Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
@@ -407,7 +427,8 @@ function startPicto(s) {
       <div style="display:flex;flex-direction:column;gap:22px">
         <div class="panel" style="padding:20px 18px">
           <div class="guess-stage">
-            <div style="display:flex;justify-content:center;margin-bottom:8px" id="pMascot">${mascot("idle", 56)}</div>
+            <div class="stopwatch" id="pTime">0.00 s</div>
+            <div style="display:flex;justify-content:center;margin:6px 0 8px" id="pMascot">${mascot("idle", 56)}</div>
             <div class="guess-word" id="pGuess"><span class="muted">en attente d'un trait</span></div>
             <div class="guess-sub" id="pSub">le modele observe ton croquis</div>
             <div class="confbar"><i id="pConf" style="width:4%"></i></div>
@@ -424,10 +445,10 @@ function startPicto(s) {
           </div>
         </div>
         <div class="panel" style="padding:16px 18px">
-          <div style="font-weight:800">Meilleur score : <span id="pBest">0</span> pts</div>
-          <p class="field-label" style="margin:8px 0 0">Plus tu fais deviner vite, plus tu marques. Ton meilleur dessin est enregistre.</p>
-          <button class="btn" id="pSave" style="margin-top:12px;width:100%">${icon("spark", 16, "vertical-align:-3px;margin-right:6px")}Enregistrer au classement</button>
-          <div id="pSaveBox" style="margin-top:10px"></div>
+          <p class="field-label">Ton pseudo</p>
+          <input id="pName" class="lb-input" maxlength="16" placeholder="Anonyme" style="width:100%">
+          <p class="field-label" style="margin:10px 0 0">Plus tu fais deviner vite, mieux c'est. Ton temps et ton dessin sont enregistres au classement quand l'IA trouve.</p>
+          <div id="pRecord" style="margin-top:10px;font-weight:800;min-height:20px"></div>
         </div>
       </div>
     </div>`;
@@ -449,10 +470,20 @@ function startPicto(s) {
   $("pClear").onclick = () => clearCanvas();
   $("pNew").onclick = nextWord;
   $("pWord").textContent = FR[P.word];
-  $("pSave").onclick = () => {
-    if (P.best.score > 0) renderSubmit($("pSaveBox"), "picto", P.best.score, P.best.thumb);
-    else $("pSaveBox").innerHTML = `<span class="muted" style="font-weight:700">Fais d'abord deviner un mot pour avoir un score.</span>`;
-  };
+  $("pName").value = localStorage.getItem("mlp_name") || "";
+  $("pName").oninput = () => { const v = $("pName").value.trim(); if (v) localStorage.setItem("mlp_name", v); };
+
+  // chrono stressant (centiemes de seconde) : demarre avec chaque mot, s'arrete quand trouve
+  function startSW() {
+    clearInterval(P.swTimer); P.wordStart = Date.now();
+    P.swTimer = setInterval(() => {
+      const t = (Date.now() - P.wordStart) / 1000, el = $("pTime");
+      if (!el) return;
+      el.textContent = t.toFixed(2) + " s";
+      el.style.color = t > 10 ? "var(--danger)" : t > 5 ? "var(--p-orange)" : "var(--ink)";
+    }, 70);
+  }
+  function stopSW() { clearInterval(P.swTimer); P.swTimer = null; }
 
   const canvas = $("pCanvas");
   function captureThumb() { const tc = document.createElement("canvas"); tc.width = 88; tc.height = 88; tc.getContext("2d").drawImage(canvas, 0, 0, 88, 88); return tc.toDataURL("image/png"); }
@@ -466,10 +497,10 @@ function startPicto(s) {
     P.ctx = ctx;
   }
   setup();
-  P.wordStart = Date.now();
+  startSW();
   const onResize = () => setup();
   addEventListener("resize", onResize);
-  cleanup = () => removeEventListener("resize", onResize);
+  cleanup = () => { removeEventListener("resize", onResize); stopSW(); };
 
   function pos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
   function down(e) { if (P.found) return; e.preventDefault(); P.drawing = true; P.last = pos(e); }
@@ -481,7 +512,7 @@ function startPicto(s) {
     ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(p.x, p.y); ctx.stroke();
     P.last = p;
   }
-  function up() { if (!P.drawing) return; P.drawing = false; if (!P.erase) { P.strokes++; runGuess(); } }
+  function up() { if (!P.drawing) return; P.drawing = false; if (!P.erase) runGuess(); }
   canvas.addEventListener("mousedown", down); canvas.addEventListener("mousemove", move);
   canvas.addEventListener("mouseup", up); canvas.addEventListener("mouseleave", up);
   canvas.addEventListener("touchstart", down, { passive: false });
@@ -490,9 +521,10 @@ function startPicto(s) {
 
   function setMood(m) { $("pMascot").innerHTML = mascot(m, 56); }
 
-  function clearCanvas() { setup(); P.found = false; P.guess = null; P.thinking = false; P.strokes = 0; P.wordStart = Date.now();
+  function clearCanvas() { setup(); P.found = false; P.guess = null; P.thinking = false;
     $("pGuess").innerHTML = `<span class="muted">en attente d'un trait</span>`;
-    $("pSub").textContent = "le modele observe ton croquis"; $("pConf").style.width = "4%"; $("pConf").style.background = ""; setMood("idle"); }
+    $("pSub").textContent = "le modele observe ton croquis"; $("pConf").style.width = "4%"; $("pConf").style.background = "";
+    $("pRecord").innerHTML = ""; setMood("idle"); startSW(); }
 
   async function runGuess() {
     if (P.found || P.pending) return;
@@ -507,16 +539,28 @@ function startPicto(s) {
       const isWord = pred.label === P.word;
       $("pConf").style.width = conf + "%";
       if (isWord) {
-        P.found = true; setMood("win");
-        const elapsed = (Date.now() - P.wordStart) / 1000;
-        const pts = Math.max(20, Math.round(300 - elapsed * 16 - P.strokes * 8));
+        P.found = true; setMood("win"); stopSW();
+        const time = (Date.now() - P.wordStart) / 1000;
         const thumb = captureThumb();
-        if (pts > P.best.score) { P.best = { score: pts, thumb }; $("pBest").textContent = pts; }
-        $("pGuess").innerHTML = `<span style="color:var(--accent)">&laquo; ${FR[pred.label]} &raquo; ! +${pts}</span>`;
-        $("pSub").textContent = "Trouve ! mot suivant...";
+        const word = P.word;
+        $("pGuess").innerHTML = `<span style="color:var(--accent)">Felicitations ! &laquo; ${FR[pred.label]} &raquo;</span>`;
+        $("pSub").textContent = `trouve en ${time.toFixed(2)} s`;
+        $("pConf").style.width = "100%";
         $("pConf").style.background = "linear-gradient(90deg,var(--p-mint),var(--accent))";
-        const c = centerOf(canvas); floatPts(c.x, c.y - 20, "+" + pts); fireConfetti(c.x, c.y, { count: 120 });
-        setTimeout(nextWord, 1800); // mot suivant automatique
+        const c = centerOf(canvas); floatPts(c.x, c.y - 20, time.toFixed(2) + " s"); fireConfetti(c.x, c.y, { count: 120 });
+        // enregistrement auto (temps + dessin) au classement de la categorie
+        const name = ($("pName").value || "").trim() || "Anonyme";
+        if (name !== "Anonyme") localStorage.setItem("mlp_name", name);
+        $("pRecord").innerHTML = `<span class="muted">enregistrement...</span>`;
+        postScore({ game: "picto", name, time, category: word, image: thumb })
+          .then((r) => {
+            let msg = "Enregistre !";
+            if (r.category_first) msg = `Champion de « ${FR[word]} » !`;
+            if (r.rank != null) msg += ` Top 10 (${gradeFor(r.rank)})`;
+            $("pRecord").innerHTML = `<span class="ok">${msg}</span>`;
+          })
+          .catch((e) => { $("pRecord").innerHTML = `<span class="ko">${e.message}</span>`; });
+        setTimeout(nextWord, 2400);
       } else {
         setMood("idle");
         $("pGuess").innerHTML = `<span>&laquo; ${FR[pred.label]} &raquo; ?</span>`;

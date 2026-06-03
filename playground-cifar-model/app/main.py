@@ -98,15 +98,18 @@ def get_leaderboard():
 class ScoreIn(BaseModel):
     game: str
     name: str = "Anonyme"
-    score: int
+    score: int | None = None
+    time: float | None = None
+    category: str | None = None
     image: str | None = None
 
 
 @app.post("/api/score")
 def post_score(s: ScoreIn):
-    """Enregistre un score ; renvoie le top 10 et le rang (si dans le top 10)."""
+    """Enregistre un score (duel) ou un temps+dessin (picto)."""
     try:
-        return lb.submit(s.game, s.name, s.score, s.image)
+        return lb.submit(s.game, s.name, score=s.score, time=s.time,
+                         category=s.category, image=s.image)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

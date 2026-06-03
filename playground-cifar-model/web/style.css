@@ -386,3 +386,35 @@ table.lb .sc { text-align: right; font-family: var(--font-display); font-weight:
   animation: floatup 1s ease-out forwards;
 }
 @keyframes floatup { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, -50px); } }
+
+/* ---------- palette : ne deborde plus du cadre ---------- */
+.palette { display: flex; flex-wrap: wrap; gap: 8px; }
+.palette .swatch { width: 34px; height: 34px; aspect-ratio: auto; flex: 0 0 auto; }
+
+/* ---------- chrono (stressant) ---------- */
+.stopwatch {
+  font-family: var(--font-display); font-weight: 900; font-size: 34px;
+  text-align: center; letter-spacing: .01em; line-height: 1; font-variant-numeric: tabular-nums;
+}
+
+/* ---------- couleurs ok / ko (hors verdict) ---------- */
+.lb-res .ok, #pRecord .ok { color: #2f9e76; }
+.lb-res .ko, #pRecord .ko { color: #cc5c7e; }
+
+/* ---------- leaderboard : miniatures + sous-libelle ---------- */
+.lb-thumb { width: 38px; height: 38px; border-radius: 8px; image-rendering: pixelated; vertical-align: middle; border: 1px solid var(--hairline); display: block; }
+.lb-sub { color: var(--muted); font-weight: 700; font-size: 12px; }
+table.lb td { vertical-align: middle; }
+
+/* ---------- champions par categorie ---------- */
+.cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 700px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+.cat-cell { text-align: center; }
+.cat-pic {
+  aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--surface-2);
+  border: var(--card-border); display: grid; place-items: center;
+}
+.cat-pic img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.cat-empty { color: var(--muted); font-weight: 900; font-size: 22px; }
+.cat-name { font-family: var(--font-display); font-weight: 900; margin-top: 6px; }
+.cat-meta { color: var(--muted); font-weight: 700; font-size: 12px; }
