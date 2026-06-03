@@ -602,7 +602,9 @@ body[data-screen="cinic"] .stat-row { margin: 0 0 14px; }
   .p-hint { display: none; }
   .p-name.has-name { display: none; }   /* pseudo deja connu -> on ne le montre pas */
 
-  /* devinette compacte : chrono + mot sur une ligne, barre fine dessous */
+  /* devinette compacte : chrono + mot sur une ligne, barre fine dessous ;
+     tous les panneaux prennent TOUTE la largeur */
+  .p-guess, .p-name, .p-tools { width: 100%; align-self: stretch; }
   .p-guess { order: 2; padding: 6px 12px; }
   .guess-stage { margin-bottom: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 3px 10px; text-align: left; }
   #pMascot { display: none; }
@@ -611,12 +613,17 @@ body[data-screen="cinic"] .stat-row { margin: 0 0 14px; }
   .guess-sub { display: none; }
   .confbar { margin-top: 0; height: 5px; flex: 1 0 100%; }
 
-  /* LE DESSIN D'ABORD : toute la largeur ET toute la hauteur restante */
+  /* LE DESSIN D'ABORD : toute la largeur ET toute la hauteur restante.
+     Canvas en absolu : il epouse exactement la carte (un % de hauteur dans
+     du flex ne se resout pas de maniere fiable -> il restait carre). */
   body[data-screen="picto"] .draw-card {
     order: 3; flex: 1 1 200px; min-height: 160px; width: 100%;
-    margin: 0; padding: 6px; display: flex;
+    margin: 0; padding: 6px; position: relative;
   }
-  body[data-screen="picto"] .draw-card canvas { width: 100%; height: 100%; aspect-ratio: auto; }
+  body[data-screen="picto"] .draw-card canvas {
+    position: absolute; left: 6px; top: 6px;
+    width: calc(100% - 12px); height: calc(100% - 12px); aspect-ratio: auto;
+  }
 
   /* outils mini : couleurs reduites sur une ligne, boutons icones seules */
   .p-tools { order: 4; padding: 8px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
