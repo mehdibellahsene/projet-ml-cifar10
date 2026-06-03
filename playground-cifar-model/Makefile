@@ -13,7 +13,7 @@ deploy:
 
 ## Etat de l'exposition publique
 deploy-status:
-	$(SRV_BIN) status $(PUBLIC_HOST)
+	$(SRV_BIN) show $(PUBLIC_HOST)
 
 build:
 	PUBLIC_PORT=$(PUBLIC_PORT) docker compose build
