@@ -23,8 +23,8 @@ from PIL import Image
 LB_PATH = os.environ.get("LB_PATH", "lbdata/leaderboard.json")
 CATEGORIES = ["airplane", "automobile", "bird", "cat", "deer",
               "dog", "frog", "horse", "ship", "truck"]
-DUEL_KEEP = 10
-PICTO_KEEP = 40        # assez pour couvrir top 10 + 1er de chaque categorie
+DUEL_KEEP = 100        # stocke large (affichage = top 10) : personne n'est perdu
+PICTO_KEEP = 200       # idem ; couvre top 10 + 1er de chaque categorie
 MAX_DUEL_SCORE = 50000  # au-dela, score forcement forge (anti-triche)
 # l'historique "mentions honorables" est illimite : tous les dessins devines
 _lock = threading.Lock()
