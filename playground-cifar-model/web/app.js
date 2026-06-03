@@ -32,6 +32,13 @@ const THEMES = [{ v: "tableau", l: "Tableau" }, { v: "cahier", l: "Cahier" }, { 
 window.__juice = 1.2;
 window.__mascot = true;
 
+// version de l'appli = cache-buster ?v=N du <script> (une seule source de verite)
+const APP_VERSION = (() => {
+  const sc = document.querySelector('script[src*="app.js"]');
+  const m = sc && sc.src.match(/[?&]v=(\d+)/);
+  return m ? "v" + m[1] : "dev";
+})();
+
 /* ---------------- icones ---------------- */
 const ICONS = {
   logo: '<path d="M5 12h3l2-5 4 12 2-7h3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -258,7 +265,7 @@ function renderShell() {
          <p class="subtitle">${TXT.subtitle}</p>
        </header>
        <main id="screen"></main>
-       <div class="foot"><span>EfficientNet-B5 &middot; projet ML CIFAR-10 &middot; BELLAHSENE Mehdi Redha</span><span>10 categories &middot; ~97,9 % en test</span></div>
+       <div class="foot"><span>EfficientNet-B5 &middot; projet ML CIFAR-10 &middot; BELLAHSENE Mehdi Redha</span><span>10 categories &middot; ~97,9 % en test &middot; ${APP_VERSION}</span></div>
      </div>`;
   $("wordmark").onclick = () => go("home");
 }
