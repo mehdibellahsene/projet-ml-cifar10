@@ -7,6 +7,7 @@ services:
     environment:
       - PORT=${PUBLIC_PORT:-8771}
       - LB_PATH=/srv/lbdata/leaderboard.json
+      - LB_RESET_TOKEN=${LB_RESET_TOKEN:-reset-ml-bmr-2026}
     ports:
       - "${PUBLIC_PORT:-8771}:${PUBLIC_PORT:-8771}"
     volumes:

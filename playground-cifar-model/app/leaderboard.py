@@ -33,6 +33,24 @@ def all_top(n: int = 10) -> dict:
     return {g: d[g][:n] for g in GAMES}
 
 
+def _save(d: dict) -> None:
+    os.makedirs(os.path.dirname(LB_PATH) or ".", exist_ok=True)
+    tmp = LB_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(d, f, ensure_ascii=False)
+    os.replace(tmp, LB_PATH)
+
+
+def reset(game: str | None = None) -> None:
+    """Vide le classement d'un jeu, ou tous si game est None."""
+    with _lock:
+        d = _load()
+        for g in GAMES:
+            if game is None or g == game:
+                d[g] = []
+        _save(d)
+
+
 def submit(game: str, name: str, score: int, image: str | None = None) -> dict:
     if game not in GAMES:
         raise ValueError("jeu inconnu")

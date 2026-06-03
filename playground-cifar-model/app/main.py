@@ -15,7 +15,7 @@ import os
 
 import numpy as np
 from PIL import Image
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -105,6 +105,16 @@ def post_score(s: ScoreIn):
         return lb.submit(s.game, s.name, s.score, s.image)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/api/leaderboard")
+def reset_leaderboard(game: str | None = None, x_reset_token: str | None = Header(default=None)):
+    """Remet a zero un classement (ou tous). Protege par le token LB_RESET_TOKEN."""
+    token = os.environ.get("LB_RESET_TOKEN")
+    if not token or x_reset_token != token:
+        raise HTTPException(status_code=403, detail="token invalide")
+    lb.reset(game)
+    return {"ok": True, "reset": game or "all"}
 
 
 # Frontend statique monte en DERNIER pour ne pas masquer les routes /api et /healthz.

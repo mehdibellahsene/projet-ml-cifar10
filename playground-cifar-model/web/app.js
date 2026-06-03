@@ -266,7 +266,7 @@ function renderHome(s) {
    ============================================================ */
 const ROUNDS = 10, TIME_MS = 3000;
 function startDuel(s) {
-  const S = { imgs: [], i: 0, me: 0, ai: 0, score: 0, roundStart: 0, phase: "load", picked: null, timer: null, aiP: null };
+  const S = { imgs: [], i: 0, me: 0, ai: 0, score: 0, roundStart: 0, phase: "load", picked: null, timer: null, advance: null, aiP: null };
   s.innerHTML = screenHead("duel", TXT.duelName) +
     `<div class="fadeup" id="duelBody"><p style="text-align:center;color:var(--muted)">Chargement du duel...</p></div>`;
   wireHome(s);
@@ -278,7 +278,7 @@ function startDuel(s) {
     if (i >= 0 && i < btns.length) resolve(btns[i].dataset.c);
   };
   addEventListener("keydown", onKey);
-  cleanup = () => { clearInterval(S.timer); removeEventListener("keydown", onKey); };
+  cleanup = () => { clearInterval(S.timer); clearTimeout(S.advance); removeEventListener("keydown", onKey); };
 
   fetchRound(ROUNDS).then((imgs) => { S.imgs = imgs; renderPlay(); }).catch((e) => toast(e.message));
 
@@ -361,8 +361,11 @@ function startDuel(s) {
     </span>`;
 
     const last = S.i + 1 >= ROUNDS;
-    $("dNext").innerHTML = `<button class="btn primary" id="dNextBtn">${last ? "Voir le resultat" : "Manche suivante"} ${icon("arrow", 18, "vertical-align:-3px;margin-left:6px")}</button>`;
-    $("dNextBtn").onclick = () => { if (last) done(); else { S.i++; showRound(); } };
+    const proceed = () => { clearTimeout(S.advance); if (last) done(); else { S.i++; showRound(); } };
+    $("dNext").innerHTML = `<button class="btn primary" id="dNextBtn">${last ? "Voir le resultat" : "Manche suivante"} ${icon("arrow", 18, "vertical-align:-3px;margin-left:6px")}</button>
+      <div class="muted" style="font-size:13px;margin-top:8px">enchaine automatiquement dans 5 s</div>`;
+    $("dNextBtn").onclick = proceed;
+    S.advance = setTimeout(proceed, 5000);
   }
 
   function bump(id) { const el = $(id); el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
