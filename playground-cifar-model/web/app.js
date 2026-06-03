@@ -286,9 +286,19 @@ function renderHome(s) {
 /* ============================================================
    JEU 1 — LE DUEL (vrai modele : l'IA = prediction du modele)
    ============================================================ */
-const ROUNDS = 10, TIME_MS = 3000;
+const TIME_MS = 3000;
+const JOKERS = [
+  { type: "duo",   label: "50 / 50",        cls: "jk-blue", msg: "Joker Duo : 2 choix au prochain tour !" },
+  { type: "mult",  mult: 10,  label: "x10",  cls: "jk-gold", msg: "Multiplicateur x10 arme !" },
+  { type: "mult",  mult: 50,  label: "x50",  cls: "jk-gold", msg: "Multiplicateur x50 arme !" },
+  { type: "mult",  mult: 100, label: "x100", cls: "jk-gold", msg: "Jackpot x100 arme !" },
+  { type: "blind", label: "Aveugler l'IA",  cls: "jk-pink", msg: "IA debranchee au prochain tour !" },
+  { type: "addq",  add: 3, label: "+3 questions", cls: "jk-mint", msg: "+3 questions ajoutees !" },
+];
 function startDuel(s) {
-  const S = { imgs: [], i: 0, me: 0, ai: 0, score: 0, roundStart: 0, phase: "load", picked: null, timer: null, advance: null, aiP: null };
+  const S = { imgs: [], i: 0, me: 0, ai: 0, score: 0, total: 10, roundStart: 0, phase: "load",
+              picked: null, timer: null, advance: null, aiP: null,
+              duo: false, mult: 1, blind: false, blindActive: false, jokerTimer: null, jokerEls: [] };
   s.innerHTML = screenHead("duel", TXT.duelName) +
     `<div class="fadeup" id="duelBody"><p style="text-align:center;color:var(--muted)">Chargement du duel...</p></div>`;
   wireHome(s);
@@ -300,9 +310,50 @@ function startDuel(s) {
     if (i >= 0 && i < btns.length) resolve(btns[i].dataset.c);
   };
   addEventListener("keydown", onKey);
-  cleanup = () => { clearInterval(S.timer); clearTimeout(S.advance); removeEventListener("keydown", onKey); };
+  cleanup = () => {
+    clearInterval(S.timer); clearInterval(S.advance); clearTimeout(S.jokerTimer);
+    S.jokerEls.forEach((e) => e.remove()); S.jokerEls = [];
+    removeEventListener("keydown", onKey);
+  };
 
-  fetchRound(ROUNDS).then((imgs) => { S.imgs = imgs; renderPlay(); }).catch((e) => toast(e.message));
+  fetchRound(12).then((imgs) => { S.imgs = imgs; renderPlay(); scheduleJoker(); }).catch((e) => toast(e.message));
+
+  /* ----- jokers facon casino : popent sur les cotes, a cliquer ----- */
+  function scheduleJoker() {
+    clearTimeout(S.jokerTimer);
+    S.jokerTimer = setTimeout(() => { if (S.phase === "play") spawnJoker(); scheduleJoker(); }, 2600 + Math.random() * 3800);
+  }
+  function spawnJoker() {
+    if (S.jokerEls.length >= 2) return;
+    const j = JOKERS[Math.floor(Math.random() * JOKERS.length)];
+    const el = document.createElement("button");
+    el.className = "joker " + j.cls;
+    el.innerHTML = `<span class="jk-l">${j.label}</span>`;
+    el.style[Math.random() < 0.5 ? "left" : "right"] = "12px";
+    el.style.top = (18 + Math.random() * 58) + "vh";
+    document.body.appendChild(el);
+    S.jokerEls.push(el);
+    const rm = () => { el.classList.add("jk-out"); setTimeout(() => { el.remove(); S.jokerEls = S.jokerEls.filter((x) => x !== el); }, 220); };
+    el.onclick = () => { const r = el.getBoundingClientRect(); fireConfetti(r.left + r.width / 2, r.top + r.height / 2, { count: 45 }); applyJoker(j); rm(); };
+    setTimeout(() => { if (S.jokerEls.includes(el)) rm(); }, 3600);
+  }
+  function applyJoker(j) {
+    if (j.type === "duo") S.duo = true;
+    else if (j.type === "mult") S.mult = j.mult;
+    else if (j.type === "blind") S.blind = true;
+    else if (j.type === "addq") { S.total += j.add; if ($("dRound")) $("dRound").textContent = `Manche ${S.i + 1} / ${S.total}`; }
+    toast(j.msg);
+    updateEffects();
+  }
+  function updateEffects() {
+    const el = $("dEffects"); if (!el) return;
+    const chips = [];
+    if (S.blindActive) chips.push(`<span class="eff eff-pink">IA debranchee (ce tour)</span>`);
+    if (S.duo) chips.push(`<span class="eff eff-blue">50/50 arme</span>`);
+    if (S.mult > 1) chips.push(`<span class="eff eff-gold">x${S.mult} arme</span>`);
+    if (S.blind) chips.push(`<span class="eff eff-pink">IA aveuglee (prochain)</span>`);
+    el.innerHTML = chips.join(" ");
+  }
 
   function renderPlay() {
     $("duelBody").innerHTML = `
@@ -313,6 +364,7 @@ function startDuel(s) {
         <div class="score-chip ai"><span class="num" id="dAi">0</span><span class="who">IA</span></div>
       </div>
       <div class="timerbar" id="dTimerWrap"><i id="dTimer"></i></div>
+      <div id="dEffects" class="effects"></div>
       <div class="imgframe"><img id="dImg" alt="image a reconnaitre"></div>
       <div class="opt-grid" id="dOpts"></div>
       <div class="verdict" id="dVerdict"></div>
@@ -320,11 +372,16 @@ function startDuel(s) {
     showRound();
   }
 
-  function showRound() {
+  async function showRound() {
+    if (S.i >= S.imgs.length) { try { const more = await fetchRound(10); S.imgs.push(...more); } catch (e) {} }
     S.phase = "play"; S.picked = null;
+    const useDuo = S.duo; S.duo = false;
+    S.blindActive = S.blind; S.blind = false;
     const cur = S.imgs[S.i], truth = cur.true_label;
-    const opts = shuffle([truth, ...shuffle(CLASSES.filter((c) => c !== truth)).slice(0, 2)]);
-    $("dRound").textContent = `Manche ${S.i + 1} / ${ROUNDS}`;
+    const nDist = useDuo ? 1 : 2;   // Duo -> 2 choix au total
+    const opts = shuffle([truth, ...shuffle(CLASSES.filter((c) => c !== truth)).slice(0, nDist)]);
+    $("dRound").textContent = `Manche ${S.i + 1} / ${S.total}`;
+    updateEffects();
     $("dImg").src = cur.image;
     $("dVerdict").innerHTML = ""; $("dNext").innerHTML = "";
     $("dOpts").innerHTML = opts.map((c, k) => `<button class="opt-btn" data-c="${c}"><span class="key">${k + 1}</span>${FR[c]}</button>`).join("");
@@ -353,51 +410,65 @@ function startDuel(s) {
     s.querySelectorAll(".opt-btn").forEach((b) => (b.disabled = true));
 
     const aiGuess = await S.aiP;
-    const playerOk = choice === truth, aiOk = aiGuess === truth;
+    const playerOk = choice === truth;
+    let aiOk = aiGuess === truth;
+    if (S.blindActive) aiOk = false;   // IA debranchee : forcement fausse
     if (playerOk) { S.me++; bump("dMe"); }
     if (aiOk) { S.ai++; bump("dAi"); }
     $("dMe").textContent = S.me; $("dAi").textContent = S.ai;
 
-    // points : 50 par bonne reponse + bonus vitesse (jusqu'a +50) + bonus si tu bats l'IA (+25)
+    // points : 50 + bonus vitesse (jusqu'a +50) + bonus si tu bats l'IA (+25), x multiplicateur
+    const m = S.mult;
     if (playerOk) {
       const frac = Math.max(0, (TIME_MS - (Date.now() - S.roundStart)) / TIME_MS);
       let pts = 50 + Math.round(50 * frac);
       if (!aiOk) pts += 25;
+      pts *= m;
       S.score += pts;
-      const c = centerOf(s.querySelector(".imgframe")); floatPts(c.x, c.y - 30, "+" + pts);
+      const c = centerOf(s.querySelector(".imgframe")); floatPts(c.x, c.y - 30, "+" + pts + (m > 1 ? ` (x${m})` : ""));
     }
+    S.mult = 1;   // multiplicateur consomme
 
     s.querySelectorAll(".opt-btn").forEach((b) => {
       if (b.dataset.c === truth) b.classList.add("right");
       else if (b.dataset.c === choice) b.classList.add("wrong");
     });
 
-    if (playerOk) { const c = centerOf(s.querySelector(".imgframe")); fireConfetti(c.x, c.y, { count: 60 }); }
+    if (playerOk) { const c = centerOf(s.querySelector(".imgframe")); fireConfetti(c.x, c.y, { count: m > 1 ? 120 : 60 }); }
+    updateEffects();
 
+    const iaTxt = S.blindActive ? "debranchee" : aiGuess ? (aiOk ? "a trouve" : "s'est trompee") : "n'a pas repondu";
     $("dVerdict").innerHTML = `<span class="fadeup">
       <span class="${playerOk ? "ok" : "ko"}">${playerOk ? "Bravo, trouve !" : choice === null ? "Trop tard !" : "Rate"}</span>
       <span class="sep">&middot;</span>
-      <span class="${aiOk ? "ok" : "ko"}">IA : ${aiGuess ? (aiOk ? "a trouve" : "s'est trompee") : "n'a pas repondu"}</span>
+      <span class="${aiOk ? "ok" : "ko"}">IA : ${iaTxt}</span>
       <span class="sep">&middot;</span>
       <span style="color:var(--muted)">reponse : <b style="color:var(--ink)">${FR[truth]}</b></span>
     </span>`;
 
-    const last = S.i + 1 >= ROUNDS;
-    const proceed = () => { clearTimeout(S.advance); if (last) done(); else { S.i++; showRound(); } };
+    const last = S.i + 1 >= S.total;
+    const proceed = () => { clearInterval(S.advance); if (last) done(); else { S.i++; showRound(); } };
     $("dNext").innerHTML = `<button class="btn primary" id="dNextBtn">${last ? "Voir le resultat" : "Manche suivante"} ${icon("arrow", 18, "vertical-align:-3px;margin-left:6px")}</button>
-      <div class="muted" style="font-size:13px;margin-top:8px">enchaine automatiquement dans 5 s</div>`;
+      <div class="muted" style="font-size:14px;margin-top:8px">Suivant dans <b id="dCount">5</b></div>`;
     $("dNextBtn").onclick = proceed;
-    S.advance = setTimeout(proceed, 5000);
+    let remain = 5;
+    clearInterval(S.advance);
+    S.advance = setInterval(() => {
+      remain--;
+      if (remain <= 0) { clearInterval(S.advance); proceed(); }
+      else if ($("dCount")) $("dCount").textContent = remain;
+    }, 1000);
   }
 
   function bump(id) { const el = $(id); el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
 
   function done() {
+    S.phase = "done";
     const win = S.me > S.ai, tie = S.me === S.ai;
     $("duelBody").innerHTML = `<div class="fadeup" style="text-align:center;padding:20px 0 40px">
       ${mascot(win ? "win" : tie ? "idle" : "sad", 96, true)}
       <h2 style="font-family:var(--font-display);font-size:40px;margin:14px 0 6px;letter-spacing:-.02em">${win ? "Tu as battu la machine !" : tie ? "Egalite parfaite." : "La machine l'emporte."}</h2>
-      <p style="color:var(--muted);font-weight:700;font-size:18px">Toi <b style="color:var(--ink)">${S.me}</b> &nbsp;—&nbsp; IA <b style="color:var(--ink)">${S.ai}</b> &nbsp;sur ${ROUNDS} manches</p>
+      <p style="color:var(--muted);font-weight:700;font-size:18px">Toi <b style="color:var(--ink)">${S.me}</b> &nbsp;—&nbsp; IA <b style="color:var(--ink)">${S.ai}</b> &nbsp;sur ${S.total} manches</p>
       <p style="margin:14px 0"><span class="score-pill">${icon("spark", 18)} ${S.score} points</span></p>
       <div class="panel lb-submit"><div style="font-weight:800;margin-bottom:10px">Entre ton pseudo pour le classement</div><div id="dSubmit"></div></div>
       <div style="display:flex;gap:12px;justify-content:center;margin-top:22px">
@@ -406,7 +477,11 @@ function startDuel(s) {
       </div></div>`;
     if (win) setTimeout(() => fireConfetti(null, innerHeight * 0.4, { count: 160 }), 120);
     renderSubmit($("dSubmit"), "duel", S.score);
-    $("dAgain").onclick = () => { S.i = 0; S.me = 0; S.ai = 0; S.score = 0; renderPlay(); };
+    $("dAgain").onclick = () => {
+      S.i = 0; S.me = 0; S.ai = 0; S.score = 0; S.total = 10;
+      S.duo = false; S.mult = 1; S.blind = false; S.blindActive = false;
+      renderPlay();
+    };
     $("dHome").onclick = () => go("home");
   }
 }

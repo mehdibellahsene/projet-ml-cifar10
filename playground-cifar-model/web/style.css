@@ -394,6 +394,27 @@ table.lb .sc { text-align: right; font-family: var(--font-display); font-weight:
 /* ---------- bouton outil actif (pinceau / remplir) ---------- */
 .tool-btn.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
 
+/* ---------- effets armes (duel) ---------- */
+.effects { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
+.eff { font-family: var(--font-display); font-weight: 800; font-size: 13px; padding: 4px 12px; border-radius: 999px; border: var(--card-border); }
+.eff-blue { background: color-mix(in srgb, var(--p-blue) 42%, var(--surface)); }
+.eff-gold { background: color-mix(in srgb, var(--p-yellow) 52%, var(--surface)); }
+.eff-pink { background: color-mix(in srgb, var(--p-pink) 42%, var(--surface)); }
+
+/* ---------- jokers facon casino (popent sur les cotes) ---------- */
+.joker {
+  position: fixed; z-index: 60; border: none; cursor: pointer; color: var(--on-accent);
+  font-family: var(--font-display); font-weight: 900; font-size: 18px;
+  padding: 14px 18px; border-radius: 16px; box-shadow: var(--shadow);
+  animation: jkin .25s cubic-bezier(.34,1.56,.64,1), jkpulse 1.1s ease-in-out .25s infinite;
+}
+.joker.jk-out { animation: jkout .22s ease forwards; }
+.jk-blue { background: var(--p-blue); } .jk-gold { background: var(--p-yellow); }
+.jk-pink { background: var(--p-pink); } .jk-mint { background: var(--p-mint); }
+@keyframes jkin { from { opacity: 0; transform: scale(.5) rotate(-4deg); } to { opacity: 1; transform: scale(1) rotate(-4deg); } }
+@keyframes jkout { to { opacity: 0; transform: scale(.6) rotate(-4deg); } }
+@keyframes jkpulse { 0%,100% { transform: scale(1) rotate(-4deg); } 50% { transform: scale(1.09) rotate(-4deg); } }
+
 /* ---------- chrono (stressant) ---------- */
 .stopwatch {
   font-family: var(--font-display); font-weight: 900; font-size: 34px;

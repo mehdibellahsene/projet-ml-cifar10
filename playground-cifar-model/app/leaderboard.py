@@ -107,10 +107,16 @@ def submit(game: str, name: str, score=None, time=None, category=None, image=Non
         }
 
 
-def reset(game: str | None = None) -> None:
+def reset(game: str | None = None, name: str | None = None) -> None:
+    """Vide un/les classement(s), ou (si name fourni) supprime juste les entrees
+    d'un pseudo donne sans toucher au reste."""
     with _lock:
         d = _load()
         for g in ("duel", "picto"):
-            if game is None or g == game:
+            if game is not None and g != game:
+                continue
+            if name is not None:
+                d[g] = [e for e in d[g] if e.get("name") != name]
+            else:
                 d[g] = []
         _save(d)

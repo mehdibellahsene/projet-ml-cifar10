@@ -115,13 +115,15 @@ def post_score(s: ScoreIn):
 
 
 @app.delete("/api/leaderboard")
-def reset_leaderboard(game: str | None = None, x_reset_token: str | None = Header(default=None)):
-    """Remet a zero un classement (ou tous). Protege par le token LB_RESET_TOKEN."""
+def reset_leaderboard(game: str | None = None, name: str | None = None,
+                      x_reset_token: str | None = Header(default=None)):
+    """Vide un classement (ou tous), ou supprime un pseudo precis (?name=).
+    Protege par le token LB_RESET_TOKEN."""
     token = os.environ.get("LB_RESET_TOKEN")
     if not token or x_reset_token != token:
         raise HTTPException(status_code=403, detail="token invalide")
-    lb.reset(game)
-    return {"ok": True, "reset": game or "all"}
+    lb.reset(game, name)
+    return {"ok": True, "reset": game or "all", "name": name}
 
 
 # Frontend statique monte en DERNIER pour ne pas masquer les routes /api et /healthz.
