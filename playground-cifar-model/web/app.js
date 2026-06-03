@@ -215,24 +215,34 @@ function renderSubmit(container, game, score, image) {
   };
   btn.onclick = send; inp.onkeydown = (e) => { if (e.key === "Enter") send(); };
 }
+// top 10 : note (A+...F) ; au-dela : rang #N (liste complete, scrollable)
+function rankBadge(ti) {
+  return ti < 10
+    ? `<span class="lb-grade g${gradeFor(ti)[0]}">${gradeFor(ti)}</span>`
+    : `<span class="lb-rank">#${ti + 1}</span>`;
+}
 function lbDuel(entries) {
   const tie = tieIdx(entries, (e) => e.score);
   const rows = entries.length
-    ? entries.map((e, i) => `<tr><td><span class="lb-grade g${gradeFor(tie[i])[0]}">${gradeFor(tie[i])}</span></td>
+    ? entries.map((e, i) => `<tr><td>${rankBadge(tie[i])}</td>
         <td class="nm">${esc(e.name)}</td><td class="sc">${e.score} pts</td></tr>`).join("")
     : `<tr><td colspan="3" class="lb-empty">Aucun score — sois le premier !</td></tr>`;
-  return `<div class="lb-card"><h3><span class="ti">${icon("duel", 15)}</span>${TXT.duelName}</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
+  return `<div class="lb-card"><h3><span class="ti">${icon("duel", 15)}</span>${TXT.duelName}</h3>
+    ${entries.length > 10 ? `<p class="lb-sub" style="margin:-6px 0 8px">${entries.length} joueurs &middot; scrolle pour voir au-dela du top 10</p>` : ""}
+    <div class="lb-scroll"><table class="lb"><tbody>${rows}</tbody></table></div></div>`;
 }
 function lbFastest(entries) {
   const tie = tieIdx(entries, (e) => Number(e.time));
   const rows = entries.length
     ? entries.map((e, i) => `<tr>
-        <td><span class="lb-grade g${gradeFor(tie[i])[0]}">${gradeFor(tie[i])}</span></td>
+        <td>${rankBadge(tie[i])}</td>
         <td>${e.image ? `<img class="lb-thumb" src="${e.image}" alt="">` : ""}</td>
         <td class="nm">${esc(e.name)}<div class="lb-sub">${FR[e.category] || ""}</div></td>
         <td class="sc">${Number(e.time).toFixed(2)} s</td></tr>`).join("")
     : `<tr><td colspan="4" class="lb-empty">Aucun dessin — sois le premier !</td></tr>`;
-  return `<div class="lb-card"><h3><span class="ti">${icon("brush", 15)}</span>${TXT.pictoName} — top 10 rapides</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
+  return `<div class="lb-card"><h3><span class="ti">${icon("brush", 15)}</span>${TXT.pictoName} — les plus rapides</h3>
+    ${entries.length > 10 ? `<p class="lb-sub" style="margin:-6px 0 8px">${entries.length} dessinateurs &middot; scrolle pour voir au-dela du top 10</p>` : ""}
+    <div class="lb-scroll"><table class="lb"><tbody>${rows}</tbody></table></div></div>`;
 }
 function lbByCat(byCat) {
   const cells = CLASSES.map((c) => {

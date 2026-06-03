@@ -91,8 +91,8 @@ async def predict(file: UploadFile = File(...)):
 
 @app.get("/api/leaderboard")
 def get_leaderboard():
-    """Top 10 par jeu (duel, picto)."""
-    return lb.all_top(10)
+    """Classement complet par jeu (le front scrolle au-dela du top 10)."""
+    return lb.all_top()
 
 
 class ScoreIn(BaseModel):

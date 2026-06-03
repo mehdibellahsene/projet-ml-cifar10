@@ -376,6 +376,12 @@ table.lb .sc { text-align: right; font-family: var(--font-display); font-weight:
 .lb-grade.gD { background: var(--p-orange); }
 .lb-grade.gF { background: var(--p-pink); }
 .lb-empty { text-align: center; color: var(--muted); padding: 16px; font-weight: 700; }
+/* liste complete : ~top 10 visible, le reste en scrollant */
+.lb-scroll { max-height: 470px; overflow-y: auto; overscroll-behavior: contain; }
+.lb-rank {
+  font-family: var(--font-display); font-weight: 900; font-size: 13px;
+  color: var(--muted); width: 38px; display: inline-block; text-align: center;
+}
 
 .lb-submit { max-width: 440px; margin: 22px auto 0; padding: 16px 18px; }
 .lb-input {

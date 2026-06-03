@@ -71,24 +71,21 @@ def _clean_name(name) -> str:
     return (str(name or "").strip() or "Anonyme")[:16]
 
 
-def all_top(n: int = 10) -> dict:
+def all_top() -> dict:
     d = _load()
-    # meme pseudo -> ne montrer que son meilleur resultat
+    # meme pseudo -> ne montrer que son meilleur resultat ; on renvoie TOUT le
+    # monde (le front affiche le top 10 puis le reste en scrollant)
     duel, seen = [], set()
     for e in sorted(d["duel"], key=lambda e: -e.get("score", 0)):
         if e.get("name") in seen:
             continue
         seen.add(e.get("name")); duel.append(e)
-        if len(duel) >= n:
-            break
     picto_sorted = sorted(d["picto"], key=lambda e: e.get("time", 1e9))
     fastest, seen = [], set()
     for e in picto_sorted:
         if e.get("name") in seen:
             continue
         seen.add(e.get("name")); fastest.append(e)
-        if len(fastest) >= n:
-            break
     by_cat: dict = {}
     for e in picto_sorted:           # deja trie par temps croissant -> 1er vu = plus rapide
         c = e.get("category")
