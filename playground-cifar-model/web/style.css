@@ -394,6 +394,15 @@ table.lb .sc { text-align: right; font-family: var(--font-display); font-weight:
 /* ---------- bouton outil actif (pinceau / remplir) ---------- */
 .tool-btn.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
 
+/* ---------- barre pseudo (accueil) ---------- */
+.pseudo-bar {
+  display: flex; align-items: center; gap: 12px; justify-content: center;
+  max-width: 460px; margin: 0 auto 22px; padding: 10px 12px 10px 20px;
+  background: var(--surface); border: var(--card-border); box-shadow: var(--shadow); border-radius: 999px;
+}
+.pseudo-q { font-family: var(--font-display); font-weight: 900; font-size: 18px; white-space: nowrap; }
+.pseudo-bar .lb-input { border-radius: 999px; text-align: center; }
+
 /* ---------- fleche "scroll" incitative (accueil) ---------- */
 .scrollcue {
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);

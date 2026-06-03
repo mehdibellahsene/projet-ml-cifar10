@@ -269,7 +269,12 @@ function renderHome(s) {
        <h3>${title}</h3><p>${desc}</p>
        <span class="go">Jouer ${icon("arrow", 14)}</span>
      </button>`;
-  s.innerHTML = `<div class="fadeup"><div class="home-grid">
+  s.innerHTML = `<div class="fadeup">
+    <div class="pseudo-bar">
+      <span class="pseudo-q">Qui joue ?</span>
+      <input id="homeName" class="lb-input" maxlength="16" placeholder="Ton pseudo" autocomplete="off">
+    </div>
+    <div class="home-grid">
       ${card("var(--p-blue)", "duel", TXT.duelName, TXT.duelTag, "duel")}
       ${card("var(--p-pink)", "brush", TXT.pictoName, TXT.pictoTag, "picto")}
       ${card("var(--p-mint)", "scope", TXT.cinicName, TXT.cinicTag, "cinic")}
@@ -277,6 +282,9 @@ function renderHome(s) {
     <div id="lbWrap" class="lb-wrap"></div>
     <div id="lbCat"></div></div>`;
   s.querySelectorAll(".game-card").forEach((c) => (c.onclick = () => go(c.dataset.go)));
+  const hn = $("homeName");
+  hn.value = localStorage.getItem("mlp_name") || "";
+  hn.oninput = () => { const v = hn.value.trim(); if (v) localStorage.setItem("mlp_name", v); };
 
   // fleche incitative : il y a les classements + dessins plus bas
   const cue = document.createElement("div");
