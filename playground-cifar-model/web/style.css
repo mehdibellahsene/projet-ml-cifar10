@@ -312,7 +312,11 @@ body::before {
 /* ---------- FOOTER ---------- */
 .foot { margin-top: 54px; border-top: 1px dashed var(--line); padding-top: 18px; display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; font-weight: 700; flex-wrap: wrap; gap: 10px; }
 
-@media (prefers-reduced-motion: reduce) { * { animation-duration: .001s !important; } }
+/* reduced-motion : une seule iteration sinon les animations "infinite"
+   (fleche, jokers) bouclent en .001s et vibrent frenetiquement sur mobile */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
+}
 
 /* ============================================================
    Ajouts integration (backend reel) — images <img>, switch theme, toast
@@ -474,3 +478,35 @@ table.lb td { vertical-align: middle; }
 .honor-ph { display: grid; place-items: center; font-family: var(--font-display); font-weight: 900; color: var(--muted); }
 .honor-cap { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.3; }
 .honor-cap b { color: var(--ink); }
+
+/* ============================================================
+   Mobile : tout doit tenir dans la hauteur de l'ecran.
+   En jeu (body[data-screen=duel|picto|cinic]) l'en-tete se replie.
+   ============================================================ */
+@media (max-width: 640px) {
+  .wrap { padding: 10px 14px 56px; }
+  .topbar { padding: 4px 0 8px; }
+  .wordmark { font-size: 26px; gap: 8px; }
+  .subtitle { font-size: 13px; margin-top: 6px; }
+
+  /* en jeu : en-tete + pied de page masques, textes d'intro masques */
+  body[data-screen="duel"] .topbar, body[data-screen="picto"] .topbar, body[data-screen="cinic"] .topbar,
+  body[data-screen="duel"] .foot,   body[data-screen="picto"] .foot,   body[data-screen="cinic"] .foot,
+  .game-intro, .game-intro-txt { display: none; }
+  .screen-head { margin: 2px 0 10px; gap: 10px; }
+  .screen-title { font-size: 22px; }
+  .crumb { padding: 7px 12px; font-size: 13px; }
+  .picto-head { margin: 0 auto 12px; }
+
+  /* duel compact : l'image se cale sur la hauteur restante */
+  .duel-bar { margin-bottom: 8px; gap: 10px; }
+  .score-chip .num { font-size: 24px; }
+  .imgframe { margin: 12px auto; width: min(80vw, 34vh); padding: 8px; border-radius: 14px; }
+  .opt-grid { gap: 8px; }
+  .opt-btn { padding: 11px 14px; font-size: 17px; }
+  .verdict { margin: 10px 0 0; font-size: 14px; }
+
+  /* jokers + fleche : plus discrets sur petit ecran */
+  .joker { font-size: 15px; padding: 10px 12px; }
+  .scrollcue { bottom: 12px; padding: 8px 13px; font-size: 13px; }
+}

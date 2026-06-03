@@ -266,6 +266,7 @@ function renderShell() {
 function go(name) {
   if (cleanup) { cleanup(); cleanup = null; }
   const s = $("screen");
+  document.body.dataset.screen = name;   // sur mobile, l'en-tete se replie en jeu
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (name === "home") return renderHome(s);
   if (name === "duel") return startDuel(s);
@@ -306,8 +307,11 @@ function renderHome(s) {
   document.body.appendChild(cue);
   cue.onclick = () => { const w = $("lbWrap"); if (w) w.scrollIntoView({ behavior: "smooth", block: "start" }); };
   const onScroll = () => {
+    // hysteresis : la barre d'adresse mobile genere des scrolls parasites,
+    // un seuil unique ferait clignoter la fleche
     const notScrollable = document.documentElement.scrollHeight <= window.innerHeight + 40;
-    cue.classList.toggle("hide", window.scrollY > 140 || notScrollable);
+    if (notScrollable || window.scrollY > 140) cue.classList.add("hide");
+    else if (window.scrollY < 80) cue.classList.remove("hide");
   };
   addEventListener("scroll", onScroll);
   cleanup = () => { removeEventListener("scroll", onScroll); cue.remove(); };
@@ -395,7 +399,7 @@ function startDuel(s) {
 
   function renderPlay() {
     $("duelBody").innerHTML = `
-      <p style="text-align:center;color:var(--muted);max-width:620px;margin:0 auto 22px;font-size:16px">${TXT.duelIntro}</p>
+      <p class="game-intro" style="text-align:center;color:var(--muted);max-width:620px;margin:0 auto 22px;font-size:16px">${TXT.duelIntro}</p>
       <div class="duel-bar">
         <div class="score-chip me"><span class="who">Toi</span><span class="num" id="dMe">0</span></div>
         <div class="round-label" id="dRound"></div>
@@ -536,7 +540,7 @@ function startPicto(s) {
               wordStart: 0, swTimer: null, lastTry: 0 };
 
   $("pictoBody").innerHTML = `
-    <p style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px">${TXT.pictoIntro} Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
+    <p class="picto-head" style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px"><span class="game-intro-txt">${TXT.pictoIntro} </span>Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
     <div class="picto-layout">
       <div class="draw-card"><canvas id="pCanvas"></canvas></div>
       <div style="display:flex;flex-direction:column;gap:22px">
@@ -618,11 +622,13 @@ function startPicto(s) {
     const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr);
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     ctx.fillStyle = "#fffef9"; ctx.fillRect(0, 0, rect.width, rect.height);
-    P.ctx = ctx;
+    P.ctx = ctx; P.cw = rect.width;
   }
   setup();
   startSW();
-  const onResize = () => setup();
+  // mobile : la barre d'adresse qui se replie emet "resize" sans changer la
+  // largeur -> ne pas effacer le dessin dans ce cas
+  const onResize = () => { if (Math.abs(canvas.getBoundingClientRect().width - P.cw) > 2) setup(); };
   addEventListener("resize", onResize);
   cleanup = () => { removeEventListener("resize", onResize); stopSW(); };
 
@@ -740,7 +746,7 @@ function startCinic(s) {
   const C = { cards: [], correct: 0, tested: 0 };
   s.innerHTML = screenHead("scope", TXT.cinicName) +
     `<div class="fadeup" id="cinicBody">
-      <p style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 18px;font-size:16px">${TXT.cinicIntro}</p>
+      <p class="game-intro" style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 18px;font-size:16px">${TXT.cinicIntro}</p>
       <div class="stat-row">
         <div class="stat"><div class="n" id="cCorrect">0</div><div class="l">Modele correct</div></div>
         <div class="stat"><div class="n" id="cTested">0</div><div class="l">Images testees</div></div>
