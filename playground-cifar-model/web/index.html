@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <header>
@@ -78,9 +78,8 @@
   <section id="pictionary" class="view">
     <button class="back" data-go="home">&larr; Accueil</button>
     <h2>Crash Test Pictionary</h2>
-    <p class="hint">Dessine <strong id="picto-target">une grenouille</strong>.
-      Le modele (entraine sur des photos 32x32) tente de deviner a chaque trait.
-      Spoiler : il va galerer.</p>
+    <p class="hint">Le modele (entraine sur des photos 32x32) tente de deviner a chaque trait. Spoiler : il va galerer.</p>
+    <div class="picto-task">Dessine : <span id="picto-target">grenouille</span></div>
 
     <div class="picto-wrap">
       <canvas id="picto-canvas" width="480" height="480"></canvas>
@@ -122,6 +121,6 @@
     <span>EfficientNetB5 &middot; projet ML CIFAR-10</span>
   </footer>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

@@ -205,7 +205,7 @@ const PICTO_COLORS = ["#2e2a26", "#e23b2e", "#f08a24", "#f0c419",
 const ERASER = "#fffdf5"; // = fond du canvas
 
 const picto = { ctx: null, drawing: false, target: null, last: null,
-                pending: false, dirty: false, color: "#2e2a26", size: 14 };
+                pending: false, dirty: false, found: false, color: "#2e2a26", size: 14 };
 
 function pictoInitPalette() {
   const pal = $("picto-palette");
@@ -240,9 +240,9 @@ function pictoInit() {
     return { x: (p.clientX - r.left) * (cv.width / r.width),
              y: (p.clientY - r.top) * (cv.height / r.height) };
   };
-  const start = (e) => { e.preventDefault(); picto.drawing = true; picto.last = pos(e); };
+  const start = (e) => { if (picto.found) return; e.preventDefault(); picto.drawing = true; picto.last = pos(e); };
   const move = (e) => {
-    if (!picto.drawing) return;
+    if (!picto.drawing || picto.found) return;
     e.preventDefault();
     const p = pos(e);
     const ctx = picto.ctx;
@@ -276,9 +276,28 @@ function pictoClear() {
   picto.ctx.fillStyle = ERASER;
   picto.ctx.fillRect(0, 0, cv.width, cv.height);
   picto.dirty = false;
-  $("picto-guess").textContent = "...";
+  picto.found = false;
+  const g = $("picto-guess");
+  g.textContent = "...";
+  g.classList.remove("win");
+  g.style.color = "var(--ink)";
+  cv.classList.remove("win");
   $("picto-bar").style.width = "0%";
   $("picto-conf").textContent = "en attente d'un trait";
+}
+
+// L'IA a devine juste : on fige le dessin et on felicite.
+function pictoWin(pct) {
+  picto.found = true;
+  picto.drawing = false;
+  clearTimeout(pictoTimer); pictoTimer = null;
+  const g = $("picto-guess");
+  g.textContent = `Bravo ! C'est bien ${FR[picto.target]} !`;
+  g.classList.add("win");
+  $("picto-bar").style.width = pct + "%";
+  $("picto-conf").textContent = `trouve a ${pct}% — nouveau mot dans un instant...`;
+  $("picto-canvas").classList.add("win");
+  setTimeout(() => { pictoClear(); pictoNewWord(); }, 2300);
 }
 
 function pictoNewWord() {
@@ -288,20 +307,26 @@ function pictoNewWord() {
 
 let pictoTimer = null;
 function pictoGuessThrottled() {
-  if (pictoTimer) return;
+  if (pictoTimer || picto.found) return;
   pictoTimer = setTimeout(() => { pictoTimer = null; pictoGuess(); }, 450);
 }
 
 async function pictoGuess() {
-  if (!picto.dirty || picto.pending) return;
+  if (!picto.dirty || picto.pending || picto.found) return;
   picto.pending = true;
   try {
     const blob = await new Promise((res) => $("picto-canvas").toBlob(res, "image/png"));
     const pred = await predictBlob(blob);
+    if (picto.found) return; // trouve entre-temps
     const pct = Math.round(pred.confidence * 100);
-    const found = pred.label === picto.target;
-    $("picto-guess").innerHTML = `${found ? "Oui, " : ""}${FR[pred.label]}${found ? " !" : "..."}`;
-    $("picto-guess").style.color = found ? "var(--accent-2)" : "var(--text)";
+    if (pred.label === picto.target) {
+      pictoWin(pct);
+      return;
+    }
+    const g = $("picto-guess");
+    g.classList.remove("win");
+    g.textContent = `${FR[pred.label]}...`;
+    g.style.color = "var(--ink)";
     $("picto-bar").style.width = pct + "%";
     $("picto-conf").textContent = `sur a ${pct}% (cible : ${FR[picto.target]})`;
   } catch (e) {
