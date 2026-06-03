@@ -78,14 +78,25 @@ async function duelStart() {
   duel.idx = 0; duel.you = 0; duel.ia = 0;
   $("duel-you").textContent = "0";
   $("duel-ia").textContent = "0";
-  duelRenderChoices();
   duelShow();
 }
 
-function duelRenderChoices() {
+function shuffle(a) {
+  const arr = a.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 3 propositions : la vraie classe + 2 distracteurs, melangees.
+function duelBuildChoices(truth) {
+  const distractors = shuffle(CLASSES.filter((c) => c !== truth)).slice(0, 2);
+  const opts = shuffle([truth, ...distractors]);
   const box = $("duel-choices");
   box.innerHTML = "";
-  CLASSES.forEach((c) => {
+  opts.forEach((c) => {
     const b = document.createElement("button");
     b.className = "choice";
     b.textContent = FR[c];
@@ -102,11 +113,8 @@ function duelShow() {
   $("duel-feedback").innerHTML = "";
   $("duel-img").src = item.image;
 
-  // reactive les boutons
-  document.querySelectorAll("#duel-choices .choice").forEach((b) => {
-    b.disabled = false;
-    b.className = "choice";
-  });
+  // construit 3 nouveaux choix pour cette image
+  duelBuildChoices(item.true_label);
 
   // l'IA reflechit en parallele (en arriere-plan, pendant les 3 s)
   duel.predP = predictBlob(dataUrlToBlob(item.image)).catch(() => null);
@@ -183,11 +191,37 @@ function duelStop() {
 }
 
 /* ============================ JEU 2 : PICTIONARY ============================ */
-const picto = { ctx: null, drawing: false, target: null, last: null, pending: false, dirty: false };
+const PICTO_COLORS = ["#2e2a26", "#e23b2e", "#f08a24", "#f0c419",
+                      "#3aa655", "#2e6fd4", "#8e44ad", "#8a5a2b"];
+const ERASER = "#fffdf5"; // = fond du canvas
+
+const picto = { ctx: null, drawing: false, target: null, last: null,
+                pending: false, dirty: false, color: "#2e2a26", size: 14 };
+
+function pictoInitPalette() {
+  const pal = $("picto-palette");
+  pal.innerHTML = "";
+  const make = (color, isEraser) => {
+    const b = document.createElement("button");
+    b.className = "swatch" + (color === picto.color ? " active" : "");
+    b.style.background = color;
+    if (isEraser) b.dataset.eraser = "1";
+    b.addEventListener("click", () => {
+      picto.color = color;
+      pal.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
+      b.classList.add("active");
+    });
+    pal.appendChild(b);
+  };
+  PICTO_COLORS.forEach((c) => make(c, false));
+  make(ERASER, true);
+}
 
 function pictoInit() {
   const cv = $("picto-canvas");
   picto.ctx = cv.getContext("2d");
+  pictoInitPalette();
+  $("picto-size").addEventListener("input", (e) => { picto.size = +e.target.value; });
   pictoClear();
   pictoNewWord();
 
@@ -203,8 +237,8 @@ function pictoInit() {
     e.preventDefault();
     const p = pos(e);
     const ctx = picto.ctx;
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 14;
+    ctx.strokeStyle = picto.color;
+    ctx.lineWidth = picto.size;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.beginPath();
@@ -230,7 +264,7 @@ function pictoInit() {
 
 function pictoClear() {
   const cv = $("picto-canvas");
-  picto.ctx.fillStyle = "#fff";
+  picto.ctx.fillStyle = ERASER;
   picto.ctx.fillRect(0, 0, cv.width, cv.height);
   picto.dirty = false;
   $("picto-guess").textContent = "...";

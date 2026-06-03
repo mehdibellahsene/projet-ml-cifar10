@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ML Playground CIFAR-10 — Humain vs Machine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -42,8 +45,8 @@
     <h2>Le Duel : Humain vs Machine</h2>
 
     <div id="duel-intro" class="center">
-      <p class="hint">10 images. Tu as <strong>3 secondes</strong> pour cliquer la bonne categorie.
-        L'IA repond en meme temps. Le plus precis gagne.</p>
+      <p class="hint">10 images. Tu as <strong>3 secondes</strong> pour choisir la bonne categorie
+        parmi <strong>3 propositions</strong>. L'IA repond en meme temps. Le plus precis gagne.</p>
       <button id="duel-start" class="btn primary">Lancer le duel</button>
     </div>
 
@@ -80,11 +83,18 @@
       Spoiler : il va galerer.</p>
 
     <div class="picto-wrap">
-      <canvas id="picto-canvas" width="280" height="280"></canvas>
+      <canvas id="picto-canvas" width="480" height="480"></canvas>
       <div class="picto-side">
         <div class="guess-big" id="picto-guess">...</div>
         <div class="bar big"><span id="picto-bar"></span></div>
         <div id="picto-conf" class="muted">en attente d'un trait</div>
+
+        <div class="palette" id="picto-palette" aria-label="couleurs"></div>
+        <div class="brush-row">
+          <span class="muted">Pinceau</span>
+          <input id="picto-size" type="range" min="4" max="32" value="14" />
+        </div>
+
         <div class="picto-buttons">
           <button id="picto-clear" class="btn">Effacer</button>
           <button id="picto-new" class="btn">Autre mot</button>
