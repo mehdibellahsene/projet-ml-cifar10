@@ -13,7 +13,7 @@ import threading
 
 LB_PATH = os.environ.get("LB_PATH", "lbdata/leaderboard.json")
 GAMES = ("duel", "picto")
-KEEP = 50          # nb de scores conserves par jeu
+KEEP = 10          # nb de scores conserves par jeu (top 10 max)
 _lock = threading.Lock()
 
 
