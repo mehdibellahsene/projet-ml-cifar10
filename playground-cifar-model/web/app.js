@@ -277,10 +277,26 @@ function renderHome(s) {
     <div id="lbWrap" class="lb-wrap"></div>
     <div id="lbCat"></div></div>`;
   s.querySelectorAll(".game-card").forEach((c) => (c.onclick = () => go(c.dataset.go)));
+
+  // fleche incitative : il y a les classements + dessins plus bas
+  const cue = document.createElement("div");
+  cue.className = "scrollcue";
+  cue.innerHTML = `<span>Classements &amp; dessins en bas</span>${icon("arrow", 20, "transform:rotate(90deg)")}`;
+  document.body.appendChild(cue);
+  cue.onclick = () => { const w = $("lbWrap"); if (w) w.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const onScroll = () => {
+    const notScrollable = document.documentElement.scrollHeight <= window.innerHeight + 40;
+    cue.classList.toggle("hide", window.scrollY > 140 || notScrollable);
+  };
+  addEventListener("scroll", onScroll);
+  cleanup = () => { removeEventListener("scroll", onScroll); cue.remove(); };
+
   fetchLeaderboard().then((lb) => {
     if ($("lbWrap")) $("lbWrap").innerHTML = lbDuel(lb.duel || []) + lbFastest(lb.picto_fastest || []);
     if ($("lbCat")) $("lbCat").innerHTML = lbByCat(lb.picto_by_cat || {});
+    onScroll();
   });
+  setTimeout(onScroll, 60);
 }
 
 /* ============================================================
