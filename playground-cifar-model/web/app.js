@@ -44,6 +44,8 @@ const ICONS = {
   trash: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></g>',
   dice: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></g>',
   spark: '<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="currentColor"/>',
+  eraser: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l6-6 6 6-4 4H9z"/><path d="M8 21h12"/></g>',
+  fill: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l6-6 6 6-6 6z"/><path d="M11 5V3"/><path d="M19 14s2 2 2 3.5a2 2 0 0 1-4 0C17 16 19 14 19 14z" fill="currentColor"/></g>',
 };
 function icon(name, size = 24, style = "") {
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="${style}" aria-hidden="true">${ICONS[name]}</svg>`;
@@ -416,9 +418,9 @@ function startPicto(s) {
   s.innerHTML = screenHead("brush", TXT.pictoName) + `<div class="fadeup" id="pictoBody"></div>`;
   wireHome(s);
 
-  const P = { ctx: null, drawing: false, last: null, color: PALETTE[0], erase: false, size: 8,
+  const P = { ctx: null, drawing: false, last: null, color: PALETTE[0], erase: false, tool: "pen", size: 8,
               word: pick(CLASSES), guess: null, thinking: false, found: false, pending: false,
-              wordStart: 0, swTimer: null };
+              wordStart: 0, swTimer: null, lastTry: 0 };
 
   $("pictoBody").innerHTML = `
     <p style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px">${TXT.pictoIntro} Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
@@ -437,7 +439,12 @@ function startPicto(s) {
         <div class="panel" style="padding:18px">
           <p class="field-label">Couleurs</p>
           <div class="palette" id="pPalette"></div>
-          <p class="field-label" style="margin-top:18px">Pinceau &middot; <span id="pSizeL">8</span>px</p>
+          <p class="field-label" style="margin-top:18px">Outil</p>
+          <div class="toolrow" id="pTools">
+            <button class="btn tool-btn on" data-tool="pen" style="flex:1;font-size:15px;padding:11px 14px">${icon("brush", 16, "vertical-align:-3px;margin-right:6px")}Pinceau</button>
+            <button class="btn tool-btn" data-tool="fill" style="flex:1;font-size:15px;padding:11px 14px">${icon("fill", 16, "vertical-align:-3px;margin-right:6px")}Remplir</button>
+          </div>
+          <p class="field-label" style="margin-top:18px">Taille &middot; <span id="pSizeL">8</span>px</p>
           <input type="range" min="2" max="30" value="8" id="pBrush" style="width:100%">
           <div class="toolrow" style="margin-top:18px">
             <button class="btn" id="pClear" style="flex:1;font-size:15px;padding:11px 14px">${icon("trash", 16, "vertical-align:-3px;margin-right:6px")}Effacer</button>
@@ -453,17 +460,21 @@ function startPicto(s) {
       </div>
     </div>`;
 
-  // palette
+  // palette (couleurs + gomme en icone)
   $("pPalette").innerHTML = PALETTE.map((c) => `<button class="swatch" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join("") +
-    `<button class="swatch eraser" data-eraser="1">gomme</button>`;
-  const refreshPalette = () => $("pPalette").querySelectorAll(".swatch").forEach((sw) => {
-    sw.classList.toggle("on", sw.dataset.eraser ? P.erase : (!P.erase && sw.dataset.c === P.color));
-  });
+    `<button class="swatch eraser" data-eraser="1" title="Gomme">${icon("eraser", 18)}</button>`;
+  const refreshTools = () => {
+    $("pPalette").querySelectorAll(".swatch").forEach((sw) => {
+      sw.classList.toggle("on", sw.dataset.eraser ? P.erase : (!P.erase && sw.dataset.c === P.color));
+    });
+    $("pTools").querySelectorAll(".tool-btn").forEach((b) => b.classList.toggle("on", b.dataset.tool === P.tool));
+  };
   $("pPalette").querySelectorAll(".swatch").forEach((sw) => (sw.onclick = () => {
     if (sw.dataset.eraser) P.erase = true; else { P.color = sw.dataset.c; P.erase = false; }
-    refreshPalette();
+    refreshTools();
   }));
-  refreshPalette();
+  $("pTools").querySelectorAll(".tool-btn").forEach((b) => (b.onclick = () => { P.tool = b.dataset.tool; refreshTools(); }));
+  refreshTools();
 
   $("pBrush").oninput = (e) => { P.size = +e.target.value; $("pSizeL").textContent = P.size; };
   function nextWord() { let w; do { w = pick(CLASSES); } while (w === P.word); P.word = w; $("pWord").textContent = FR[w]; clearCanvas(); }
@@ -503,7 +514,42 @@ function startPicto(s) {
   cleanup = () => { removeEventListener("resize", onResize); stopSW(); };
 
   function pos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
-  function down(e) { if (P.found) return; e.preventDefault(); P.drawing = true; P.last = pos(e); }
+  function hexRGB(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+  function floodFill(p, hex) {
+    const ctx = P.ctx, rect = canvas.getBoundingClientRect();
+    const dpr = canvas.width / rect.width, w = canvas.width, h = canvas.height;
+    const x0 = Math.floor(p.x * dpr), y0 = Math.floor(p.y * dpr);
+    if (x0 < 0 || y0 < 0 || x0 >= w || y0 >= h) return;
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    const at = (x, y) => (y * w + x) * 4;
+    const s = at(x0, y0), tr = d[s], tg = d[s + 1], tb = d[s + 2];
+    const [fr, fg, fb] = hexRGB(hex);
+    if (Math.abs(tr - fr) < 6 && Math.abs(tg - fg) < 6 && Math.abs(tb - fb) < 6) return;
+    const stack = [x0, y0];
+    while (stack.length) {
+      const y = stack.pop(), x = stack.pop();
+      if (x < 0 || y < 0 || x >= w || y >= h) continue;
+      const i = at(x, y);
+      if (Math.abs(d[i] - tr) > 28 || Math.abs(d[i + 1] - tg) > 28 || Math.abs(d[i + 2] - tb) > 28) continue;
+      d[i] = fr; d[i + 1] = fg; d[i + 2] = fb; d[i + 3] = 255;
+      stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  // tente une prediction "au fur et a mesure" (throttle + garde anti-surcharge)
+  function maybeGuess() {
+    if (P.found || P.pending) return;
+    const now = Date.now();
+    if (now - P.lastTry < 450) return;
+    P.lastTry = now; runGuess();
+  }
+
+  function down(e) {
+    if (P.found) return; e.preventDefault();
+    if (P.tool === "fill") { floodFill(pos(e), P.erase ? "#fffef9" : P.color); maybeGuess(); return; }
+    P.drawing = true; P.last = pos(e);
+  }
   function move(e) {
     if (!P.drawing || P.found) return; e.preventDefault();
     const ctx = P.ctx, p = pos(e), l = P.last;
@@ -511,8 +557,9 @@ function startPicto(s) {
     ctx.lineWidth = P.erase ? P.size * 2.4 : P.size;
     ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(p.x, p.y); ctx.stroke();
     P.last = p;
+    maybeGuess();           // devine pendant le trace, pas seulement a la fin
   }
-  function up() { if (!P.drawing) return; P.drawing = false; if (!P.erase) runGuess(); }
+  function up() { if (!P.drawing) return; P.drawing = false; runGuess(); }
   canvas.addEventListener("mousedown", down); canvas.addEventListener("mousemove", move);
   canvas.addEventListener("mouseup", up); canvas.addEventListener("mouseleave", up);
   canvas.addEventListener("touchstart", down, { passive: false });
@@ -528,6 +575,7 @@ function startPicto(s) {
 
   async function runGuess() {
     if (P.found || P.pending) return;
+    P.lastTry = Date.now();
     P.pending = true; P.thinking = true; setMood("think");
     $("pGuess").innerHTML = `<span class="muted">hmm...</span>`;
     try {

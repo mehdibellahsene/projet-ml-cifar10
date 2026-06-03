@@ -391,6 +391,9 @@ table.lb .sc { text-align: right; font-family: var(--font-display); font-weight:
 .palette { display: flex; flex-wrap: wrap; gap: 8px; }
 .palette .swatch { width: 34px; height: 34px; aspect-ratio: auto; flex: 0 0 auto; }
 
+/* ---------- bouton outil actif (pinceau / remplir) ---------- */
+.tool-btn.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+
 /* ---------- chrono (stressant) ---------- */
 .stopwatch {
   font-family: var(--font-display); font-weight: 900; font-size: 34px;
