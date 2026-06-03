@@ -31,10 +31,13 @@ log() { echo "[deploy] $*"; }
 docker network inspect bmr-internal >/dev/null 2>&1 || docker network create bmr-internal
 
 # --- synchronisation du code sur la branche de prod ---
-REPO_ROOT="$(git -C "$APP_DIR" rev-parse --show-toplevel)"
-log "Synchronisation $DEPLOY_BRANCH dans $REPO_ROOT"
-git -C "$REPO_ROOT" fetch --all --prune
-git -C "$REPO_ROOT" reset --hard "origin/${DEPLOY_BRANCH}"
+# (sautee quand SKIP_GIT_SYNC=1, p.ex. quand le workflow CI a deja sync.)
+if [ -z "${SKIP_GIT_SYNC:-}" ]; then
+  REPO_ROOT="$(git -C "$APP_DIR" rev-parse --show-toplevel)"
+  log "Synchronisation $DEPLOY_BRANCH dans $REPO_ROOT"
+  git -C "$REPO_ROOT" fetch --all --prune
+  git -C "$REPO_ROOT" reset --hard "origin/${DEPLOY_BRANCH}"
+fi
 
 # --- sauvegarde de l'image actuelle pour rollback ---
 if docker image inspect "${IMAGE}:latest" >/dev/null 2>&1; then
