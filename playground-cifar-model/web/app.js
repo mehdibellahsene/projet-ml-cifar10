@@ -136,6 +136,14 @@ function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 function centerOf(el) { const r = el ? el.getBoundingClientRect() : null; return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: null, y: null }; }
 
+function cheatFlash() {
+  const o = document.createElement("div");
+  o.className = "cheat-flash";
+  o.innerHTML = `ARRETE DE<br>TRICHER ! &#128544;`;
+  document.body.appendChild(o);
+  setTimeout(() => o.remove(), 2600);
+}
+
 let _toastT = null;
 function toast(msg) {
   let t = $("toast");
@@ -562,7 +570,7 @@ function startPicto(s) {
 
   const P = { ctx: null, drawing: false, last: null, color: PALETTE[0], erase: false, tool: "pen", size: 8,
               word: pick(CLASSES), guess: null, thinking: false, found: false, pending: false,
-              wordStart: 0, swTimer: null, lastTry: 0 };
+              wordStart: 0, swTimer: null, lastTry: 0, lastCheat: 0 };
 
   $("pictoBody").innerHTML = `
     <p class="picto-head" style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px"><span class="game-intro-txt">${TXT.pictoIntro} </span>Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
@@ -640,6 +648,21 @@ function startPicto(s) {
 
   const canvas = $("pCanvas");
   function captureThumb() { const tc = document.createElement("canvas"); tc.width = 88; tc.height = 88; tc.getContext("2d").drawImage(canvas, 0, 0, 88, 88); return tc.toDataURL("image/png"); }
+  // triche : un remplissage couleur unie n'est pas un dessin (>= 95 % d'une seule couleur)
+  function isSolidDrawing() {
+    const tc = document.createElement("canvas"); tc.width = 32; tc.height = 32;
+    const tx = tc.getContext("2d"); tx.drawImage(canvas, 0, 0, 32, 32);
+    const d = tx.getImageData(0, 0, 32, 32).data, counts = {};
+    let best = 0, bestK = -1;
+    for (let i = 0; i < d.length; i += 4) {
+      const k = (d[i] >> 4) * 289 + (d[i + 1] >> 4) * 17 + (d[i + 2] >> 4);
+      const c = (counts[k] = (counts[k] || 0) + 1);
+      if (c > best) { best = c; bestK = k; }
+    }
+    if (best / 1024 < 0.95) return false;
+    const r = Math.floor(bestK / 289), g = Math.floor(bestK / 17) % 17, b = bestK % 17;
+    return !(r >= 14 && g >= 14 && b >= 14);   // blanc papier tolere (dessin au trait)
+  }
   function setup() {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -730,6 +753,14 @@ function startPicto(s) {
       const conf = Math.round(pred.confidence * 100);
       const isWord = pred.label === P.word;
       $("pConf").style.width = conf + "%";
+      if (isWord && isSolidDrawing()) {
+        // couleur unie : pas de victoire, pas d'enregistrement, gros message
+        P.thinking = false; setMood("sad");
+        $("pGuess").innerHTML = `<span class="ko">Couleur unie — triche !</span>`;
+        $("pSub").textContent = "dessine vraiment quelque chose";
+        if (Date.now() - P.lastCheat > 3000) { P.lastCheat = Date.now(); cheatFlash(); }
+        return;
+      }
       if (isWord) {
         P.found = true; setMood("win"); stopSW();
         const time = (Date.now() - P.wordStart) / 1000;

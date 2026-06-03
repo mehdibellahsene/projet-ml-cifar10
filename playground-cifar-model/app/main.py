@@ -116,12 +116,16 @@ def post_score(s: ScoreIn):
 
 @app.delete("/api/leaderboard")
 def reset_leaderboard(game: str | None = None, name: str | None = None,
+                      purge: str | None = None,
                       x_reset_token: str | None = Header(default=None)):
-    """Vide un classement (ou tous), ou supprime un pseudo precis (?name=).
-    Protege par le token LB_RESET_TOKEN."""
+    """Vide un classement (ou tous), supprime un pseudo precis (?name=), ou
+    (?purge=cheat) nettoie scores forges + dessins couleur unie et restaure
+    l'historique. Protege par le token LB_RESET_TOKEN."""
     token = os.environ.get("LB_RESET_TOKEN")
     if not token or x_reset_token != token:
         raise HTTPException(status_code=403, detail="token invalide")
+    if purge == "cheat":
+        return {"ok": True, "purge": lb.purge_cheaters()}
     lb.reset(game, name)
     return {"ok": True, "reset": game or "all", "name": name}
 
