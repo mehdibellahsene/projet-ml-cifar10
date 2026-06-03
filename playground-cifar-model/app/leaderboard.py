@@ -123,7 +123,9 @@ def submit(game: str, name: str, score=None, time=None, category=None, image=Non
                 seen.add(e["name"]); uniq.append(e)
             d["duel"] = uniq[:DUEL_KEEP]
             _save(d)
-            rank = next((i for i, e in enumerate(d["duel"]) if e is entry), None)
+            kept = any(e is entry for e in d["duel"])
+            # egalite : rang "competition" = nb de scores strictement meilleurs
+            rank = sum(1 for e in d["duel"] if e["score"] > score) if kept else None
             return {"rank": rank if (rank is not None and rank < 10) else None}
 
         # picto : temps (plus bas = mieux)
@@ -153,7 +155,9 @@ def submit(game: str, name: str, score=None, time=None, category=None, image=Non
         d["history"].append(dict(entry))            # historique (ordre d'arrivee, illimite)
         _save(d)
 
-        rank = next((i for i, e in enumerate(d["picto"]) if e is entry), None)
+        kept = any(e is entry for e in d["picto"])
+        # egalite : rang "competition" = nb de temps strictement plus rapides
+        rank = sum(1 for e in d["picto"] if e["time"] < t) if kept else None
         cat_best = min((e for e in d["picto"] if e["category"] == category),
                        key=lambda e: e["time"], default=None)
         return {

@@ -174,6 +174,14 @@ async function fetchRound(n) {
 /* ---------------- leaderboard ---------------- */
 const GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "D", "F"];
 const gradeFor = (i) => GRADES[Math.min(i, GRADES.length - 1)];
+// egalite : meme valeur -> meme note (classement "competition")
+function tieIdx(entries, valOf) {
+  let idx = 0;
+  return entries.map((e, i) => {
+    if (i > 0 && valOf(e) !== valOf(entries[i - 1])) idx = i;
+    return idx;
+  });
+}
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 async function fetchLeaderboard() {
@@ -208,16 +216,18 @@ function renderSubmit(container, game, score, image) {
   btn.onclick = send; inp.onkeydown = (e) => { if (e.key === "Enter") send(); };
 }
 function lbDuel(entries) {
+  const tie = tieIdx(entries, (e) => e.score);
   const rows = entries.length
-    ? entries.map((e, i) => `<tr><td><span class="lb-grade g${gradeFor(i)[0]}">${gradeFor(i)}</span></td>
+    ? entries.map((e, i) => `<tr><td><span class="lb-grade g${gradeFor(tie[i])[0]}">${gradeFor(tie[i])}</span></td>
         <td class="nm">${esc(e.name)}</td><td class="sc">${e.score} pts</td></tr>`).join("")
     : `<tr><td colspan="3" class="lb-empty">Aucun score — sois le premier !</td></tr>`;
   return `<div class="lb-card"><h3><span class="ti">${icon("duel", 15)}</span>${TXT.duelName}</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
 }
 function lbFastest(entries) {
+  const tie = tieIdx(entries, (e) => Number(e.time));
   const rows = entries.length
     ? entries.map((e, i) => `<tr>
-        <td><span class="lb-grade g${gradeFor(i)[0]}">${gradeFor(i)}</span></td>
+        <td><span class="lb-grade g${gradeFor(tie[i])[0]}">${gradeFor(tie[i])}</span></td>
         <td>${e.image ? `<img class="lb-thumb" src="${e.image}" alt="">` : ""}</td>
         <td class="nm">${esc(e.name)}<div class="lb-sub">${FR[e.category] || ""}</div></td>
         <td class="sc">${Number(e.time).toFixed(2)} s</td></tr>`).join("")
