@@ -172,7 +172,9 @@ async function fetchRound(n) {
 }
 
 /* ---------------- leaderboard ---------------- */
-const GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "D", "F"];
+// notes decalees : le top 10 ne recoit que du A/B (affiche en vert),
+// au-dela du top 10 : C (11-20) puis F (21+)
+const GRADES = ["A+", "A", "A", "A-", "A-", "B+", "B+", "B", "B", "B-"];
 const gradeFor = (i) => GRADES[Math.min(i, GRADES.length - 1)];
 // egalite : meme valeur -> meme note (classement "competition")
 function tieIdx(entries, valOf) {
@@ -215,11 +217,10 @@ function renderSubmit(container, game, score, image) {
   };
   btn.onclick = send; inp.onkeydown = (e) => { if (e.key === "Enter") send(); };
 }
-// top 10 : note (A+...F) ; au-dela : rang #N (liste complete, scrollable)
+// top 10 : note verte (A/B) ; #11-20 : C ; #21+ : F
 function rankBadge(ti) {
-  return ti < 10
-    ? `<span class="lb-grade g${gradeFor(ti)[0]}">${gradeFor(ti)}</span>`
-    : `<span class="lb-rank">#${ti + 1}</span>`;
+  if (ti < 10) return `<span class="lb-grade gA">${gradeFor(ti)}</span>`;
+  return ti < 20 ? `<span class="lb-grade gC">C</span>` : `<span class="lb-grade gF">F</span>`;
 }
 function lbDuel(entries) {
   const tie = tieIdx(entries, (e) => e.score);
