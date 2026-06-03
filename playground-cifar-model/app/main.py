@@ -27,6 +27,17 @@ app = FastAPI(title="Playground CIFAR-10", docs_url=None, redoc_url=None)
 WEB_DIR = os.environ.get("WEB_DIR", "web")
 
 
+@app.middleware("http")
+async def no_cache_text_assets(request, call_next):
+    """Empeche la mise en cache (navigateur + CDN) du HTML/CSS/JS : les
+    changements de design sont visibles immediatement, sans cache obsolete."""
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.endswith((".html", ".css", ".js")):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
+
+
 @app.get("/healthz")
 def healthz():
     """Sonde de sante : le service repond toujours 200 s'il est demarre."""
