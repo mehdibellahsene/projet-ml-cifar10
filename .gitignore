@@ -15,3 +15,6 @@ report_assets/transfer_model.keras
 .DS_Store
 Thumbs.db
 *.log
+
+# donnees runtime du leaderboard (dev local ; en prod = volume Docker)
+playground-cifar-model/lbdata/

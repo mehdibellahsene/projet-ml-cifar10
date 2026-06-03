@@ -19,8 +19,11 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from pydantic import BaseModel
+
 from . import model as model_mod
 from . import data as data_mod
+from . import leaderboard as lb
 
 app = FastAPI(title="Playground CIFAR-10", docs_url=None, redoc_url=None)
 
@@ -80,6 +83,28 @@ async def predict(file: UploadFile = File(...)):
     except FileNotFoundError as e:
         raise HTTPException(status_code=503, detail=str(e))
     return JSONResponse(result)
+
+
+@app.get("/api/leaderboard")
+def get_leaderboard():
+    """Top 10 par jeu (duel, picto)."""
+    return lb.all_top(10)
+
+
+class ScoreIn(BaseModel):
+    game: str
+    name: str = "Anonyme"
+    score: int
+    image: str | None = None
+
+
+@app.post("/api/score")
+def post_score(s: ScoreIn):
+    """Enregistre un score ; renvoie le top 10 et le rang (si dans le top 10)."""
+    try:
+        return lb.submit(s.game, s.name, s.score, s.image)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # Frontend statique monte en DERNIER pour ne pas masquer les routes /api et /healthz.

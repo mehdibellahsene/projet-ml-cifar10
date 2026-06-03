@@ -344,3 +344,45 @@ body::before {
 
 /* le slider pinceau reprend l'accent du theme */
 input[type="range"] { accent-color: var(--accent); }
+
+/* ---------- LEADERBOARD ---------- */
+.lb-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 30px; }
+@media (max-width: 760px) { .lb-wrap { grid-template-columns: 1fr; } }
+.lb-card { background: var(--surface); border: var(--card-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 18px 8px; }
+.lb-card h3 { font-family: var(--font-display); font-weight: 900; font-size: 20px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.lb-card h3 .ti { width: 1.4em; height: 1.4em; border-radius: 9px; display: inline-grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.lb-card h3 .ti svg { width: 64%; height: 64%; }
+table.lb { width: 100%; border-collapse: collapse; }
+table.lb td { padding: 9px 6px; border-bottom: 1px solid var(--hairline); font-weight: 700; }
+table.lb tr:last-child td { border-bottom: none; }
+table.lb .nm { width: 100%; }
+table.lb .sc { text-align: right; font-family: var(--font-display); font-weight: 900; white-space: nowrap; }
+.lb-grade {
+  font-family: var(--font-display); font-weight: 900; font-size: 14px;
+  width: 38px; text-align: center; padding: 4px 0; border-radius: 9px;
+  color: var(--on-accent); display: inline-block;
+}
+.lb-grade.gA { background: var(--p-mint); }
+.lb-grade.gB { background: var(--p-blue); }
+.lb-grade.gC { background: var(--p-yellow); }
+.lb-grade.gD { background: var(--p-orange); }
+.lb-grade.gF { background: var(--p-pink); }
+.lb-empty { text-align: center; color: var(--muted); padding: 16px; font-weight: 700; }
+
+.lb-submit { max-width: 440px; margin: 22px auto 0; padding: 16px 18px; }
+.lb-input {
+  flex: 1; font-family: var(--font-body); font-weight: 700; font-size: 16px;
+  color: var(--ink); background: var(--surface-2); border: var(--card-border);
+  border-radius: 12px; padding: 12px 14px; min-width: 0;
+}
+.score-pill {
+  display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display);
+  font-weight: 900; font-size: 18px; background: color-mix(in srgb, var(--accent) 24%, var(--surface));
+  border: var(--card-border); border-radius: 999px; padding: 6px 16px;
+}
+.float-pts {
+  position: fixed; transform: translate(-50%, 0); font-family: var(--font-display); font-weight: 900;
+  font-size: 26px; color: var(--accent); pointer-events: none; z-index: 65;
+  animation: floatup 1s ease-out forwards;
+}
+@keyframes floatup { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, -50px); } }

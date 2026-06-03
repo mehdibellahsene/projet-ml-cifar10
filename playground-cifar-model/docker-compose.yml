@@ -6,8 +6,11 @@ services:
     restart: unless-stopped
     environment:
       - PORT=${PUBLIC_PORT:-8771}
+      - LB_PATH=/srv/lbdata/leaderboard.json
     ports:
       - "${PUBLIC_PORT:-8771}:${PUBLIC_PORT:-8771}"
+    volumes:
+      - lb-data:/srv/lbdata
     networks:
       - default
       - bmr-internal
@@ -21,3 +24,6 @@ services:
 networks:
   bmr-internal:
     external: true
+
+volumes:
+  lb-data:

@@ -19,7 +19,7 @@ const TXT = {
   duelName: "Le Duel",
   duelTag: "Toi contre la machine. 3 secondes par image, 10 manches — qui reconnait le mieux ?",
   duelIntro: "Une image s'affiche 3 secondes. Clique la bonne categorie (ou tape 1, 2, 3) avant que l'IA ne reponde.",
-  pictoName: "Crash Test Pictionary",
+  pictoName: "Dessine je devine",
   pictoTag: "Dessine le mot impose et regarde le modele deviner — ou paniquer — trait apres trait.",
   pictoIntro: "Dessine le mot demande. Entraine sur des photos 32x32, le modele retente sa prediction a chaque trait.",
   cinicName: "Test Ultime CINIC-10",
@@ -43,6 +43,7 @@ const ICONS = {
   refresh: '<path d="M4 11a8 8 0 0 1 14-5l2 2M20 13a8 8 0 0 1-14 5l-2-2M18 4v4h-4M6 20v-4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   trash: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></g>',
   dice: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></g>',
+  spark: '<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="currentColor"/>',
 };
 function icon(name, size = 24, style = "") {
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="${style}" aria-hidden="true">${ICONS[name]}</svg>`;
@@ -153,6 +154,52 @@ async function fetchRound(n) {
   return (await res.json()).images;
 }
 
+/* ---------------- leaderboard ---------------- */
+const GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "D", "F"];
+const gradeFor = (i) => GRADES[Math.min(i, GRADES.length - 1)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function fetchLeaderboard() {
+  try { const r = await fetch("/api/leaderboard"); if (!r.ok) return { duel: [], picto: [] }; return r.json(); }
+  catch { return { duel: [], picto: [] }; }
+}
+async function postScore(game, name, score, image) {
+  const r = await fetch("/api/score", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ game, name, score, image: image || null }) });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || "Erreur d'enregistrement"); }
+  return r.json();
+}
+function floatPts(x, y, txt) {
+  const d = document.createElement("div"); d.className = "float-pts"; d.style.left = x + "px"; d.style.top = y + "px";
+  d.textContent = txt; document.body.appendChild(d); setTimeout(() => d.remove(), 1000);
+}
+function renderSubmit(container, game, score, image) {
+  const last = esc(localStorage.getItem("mlp_name") || "");
+  container.innerHTML = `<div style="display:flex;gap:8px"><input class="lb-input" maxlength="16" placeholder="Ton pseudo" value="${last}"><button class="btn primary lb-go">Enregistrer</button></div><div class="lb-res" style="margin-top:10px;font-weight:800;min-height:20px"></div>`;
+  const inp = container.querySelector(".lb-input"), btn = container.querySelector(".lb-go"), res = container.querySelector(".lb-res");
+  const send = async () => {
+    const name = (inp.value || "").trim() || "Anonyme";
+    localStorage.setItem("mlp_name", name); btn.disabled = true; inp.disabled = true;
+    try {
+      const r = await postScore(game, name, score, image);
+      res.innerHTML = r.rank != null
+        ? `<span class="ok">Classe !</span> Note <b>${gradeFor(r.rank)}</b> &middot; #${r.rank + 1} du top`
+        : `Pas dans le top 10 cette fois — retente !`;
+    } catch (e) { res.textContent = e.message; btn.disabled = false; inp.disabled = false; }
+  };
+  btn.onclick = send; inp.onkeydown = (e) => { if (e.key === "Enter") send(); };
+}
+function lbTable(title, ic, entries, withImg) {
+  const rows = entries.length
+    ? entries.map((e, i) => `<tr>
+        <td><span class="lb-grade g${gradeFor(i)[0]}">${gradeFor(i)}</span></td>
+        ${withImg ? `<td>${e.image ? `<img src="${e.image}" alt="" style="width:36px;height:36px;border-radius:8px;image-rendering:pixelated;vertical-align:middle;border:1px solid var(--hairline)">` : ""}</td>` : ""}
+        <td class="nm">${esc(e.name)}</td>
+        <td class="sc">${e.score}</td></tr>`).join("")
+    : `<tr><td colspan="${withImg ? 4 : 3}" class="lb-empty">Aucun score — sois le premier !</td></tr>`;
+  return `<div class="lb-card"><h3><span class="ti">${icon(ic, 15)}</span>${title}</h3><table class="lb"><tbody>${rows}</tbody></table></div>`;
+}
+
 /* ---------------- theme (fixe : cahier) ---------------- */
 function applyTheme() {
   document.documentElement.setAttribute("data-theme", "cahier");
@@ -205,8 +252,13 @@ function renderHome(s) {
       ${card("var(--p-blue)", "duel", TXT.duelName, TXT.duelTag, "duel")}
       ${card("var(--p-pink)", "brush", TXT.pictoName, TXT.pictoTag, "picto")}
       ${card("var(--p-mint)", "scope", TXT.cinicName, TXT.cinicTag, "cinic")}
-    </div></div>`;
+    </div>
+    <div id="lbWrap" class="lb-wrap"></div></div>`;
   s.querySelectorAll(".game-card").forEach((c) => (c.onclick = () => go(c.dataset.go)));
+  fetchLeaderboard().then((lb) => {
+    const w = $("lbWrap"); if (!w) return;
+    w.innerHTML = lbTable(TXT.duelName, "duel", lb.duel, false) + lbTable(TXT.pictoName, "brush", lb.picto, true);
+  });
 }
 
 /* ============================================================
@@ -214,7 +266,7 @@ function renderHome(s) {
    ============================================================ */
 const ROUNDS = 10, TIME_MS = 3000;
 function startDuel(s) {
-  const S = { imgs: [], i: 0, me: 0, ai: 0, phase: "load", picked: null, timer: null, aiP: null };
+  const S = { imgs: [], i: 0, me: 0, ai: 0, score: 0, roundStart: 0, phase: "load", picked: null, timer: null, aiP: null };
   s.innerHTML = screenHead("duel", TXT.duelName) +
     `<div class="fadeup" id="duelBody"><p style="text-align:center;color:var(--muted)">Chargement du duel...</p></div>`;
   wireHome(s);
@@ -261,7 +313,7 @@ function startDuel(s) {
 
     // chrono 3 s
     const wrap = $("dTimerWrap"), bar = $("dTimer");
-    const start = Date.now();
+    const start = Date.now(); S.roundStart = start;
     bar.style.width = "100%"; wrap.classList.remove("danger");
     clearInterval(S.timer);
     S.timer = setInterval(() => {
@@ -283,6 +335,15 @@ function startDuel(s) {
     if (playerOk) { S.me++; bump("dMe"); }
     if (aiOk) { S.ai++; bump("dAi"); }
     $("dMe").textContent = S.me; $("dAi").textContent = S.ai;
+
+    // points : 50 par bonne reponse + bonus vitesse (jusqu'a +50) + bonus si tu bats l'IA (+25)
+    if (playerOk) {
+      const frac = Math.max(0, (TIME_MS - (Date.now() - S.roundStart)) / TIME_MS);
+      let pts = 50 + Math.round(50 * frac);
+      if (!aiOk) pts += 25;
+      S.score += pts;
+      const c = centerOf(s.querySelector(".imgframe")); floatPts(c.x, c.y - 30, "+" + pts);
+    }
 
     s.querySelectorAll(".opt-btn").forEach((b) => {
       if (b.dataset.c === truth) b.classList.add("right");
@@ -312,12 +373,15 @@ function startDuel(s) {
       ${mascot(win ? "win" : tie ? "idle" : "sad", 96, true)}
       <h2 style="font-family:var(--font-display);font-size:40px;margin:14px 0 6px;letter-spacing:-.02em">${win ? "Tu as battu la machine !" : tie ? "Egalite parfaite." : "La machine l'emporte."}</h2>
       <p style="color:var(--muted);font-weight:700;font-size:18px">Toi <b style="color:var(--ink)">${S.me}</b> &nbsp;—&nbsp; IA <b style="color:var(--ink)">${S.ai}</b> &nbsp;sur ${ROUNDS} manches</p>
+      <p style="margin:14px 0"><span class="score-pill">${icon("spark", 18)} ${S.score} points</span></p>
+      <div class="panel lb-submit"><div style="font-weight:800;margin-bottom:10px">Entre ton pseudo pour le classement</div><div id="dSubmit"></div></div>
       <div style="display:flex;gap:12px;justify-content:center;margin-top:22px">
         <button class="btn primary" id="dAgain">${icon("refresh", 18, "vertical-align:-3px;margin-right:6px")}Rejouer</button>
         <button class="btn ghost" id="dHome">Accueil</button>
       </div></div>`;
     if (win) setTimeout(() => fireConfetti(null, innerHeight * 0.4, { count: 160 }), 120);
-    $("dAgain").onclick = () => { S.i = 0; S.me = 0; S.ai = 0; renderPlay(); };
+    renderSubmit($("dSubmit"), "duel", S.score);
+    $("dAgain").onclick = () => { S.i = 0; S.me = 0; S.ai = 0; S.score = 0; renderPlay(); };
     $("dHome").onclick = () => go("home");
   }
 }
@@ -330,7 +394,8 @@ function startPicto(s) {
   wireHome(s);
 
   const P = { ctx: null, drawing: false, last: null, color: PALETTE[0], erase: false, size: 8,
-              word: pick(CLASSES), guess: null, thinking: false, found: false, pending: false };
+              word: pick(CLASSES), guess: null, thinking: false, found: false, pending: false,
+              wordStart: 0, strokes: 0, best: { score: 0, thumb: null } };
 
   $("pictoBody").innerHTML = `
     <p style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px">${TXT.pictoIntro} Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
@@ -355,6 +420,12 @@ function startPicto(s) {
             <button class="btn" id="pNew" style="flex:1;font-size:15px;padding:11px 14px">${icon("dice", 16, "vertical-align:-3px;margin-right:6px")}Autre mot</button>
           </div>
         </div>
+        <div class="panel" style="padding:16px 18px">
+          <div style="font-weight:800">Meilleur score : <span id="pBest">0</span> pts</div>
+          <p class="field-label" style="margin:8px 0 0">Plus tu fais deviner vite, plus tu marques. Ton meilleur dessin est enregistre.</p>
+          <button class="btn" id="pSave" style="margin-top:12px;width:100%">${icon("spark", 16, "vertical-align:-3px;margin-right:6px")}Enregistrer au classement</button>
+          <div id="pSaveBox" style="margin-top:10px"></div>
+        </div>
       </div>
     </div>`;
 
@@ -375,8 +446,13 @@ function startPicto(s) {
   $("pClear").onclick = () => clearCanvas();
   $("pNew").onclick = nextWord;
   $("pWord").textContent = FR[P.word];
+  $("pSave").onclick = () => {
+    if (P.best.score > 0) renderSubmit($("pSaveBox"), "picto", P.best.score, P.best.thumb);
+    else $("pSaveBox").innerHTML = `<span class="muted" style="font-weight:700">Fais d'abord deviner un mot pour avoir un score.</span>`;
+  };
 
   const canvas = $("pCanvas");
+  function captureThumb() { const tc = document.createElement("canvas"); tc.width = 88; tc.height = 88; tc.getContext("2d").drawImage(canvas, 0, 0, 88, 88); return tc.toDataURL("image/png"); }
   function setup() {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -387,6 +463,7 @@ function startPicto(s) {
     P.ctx = ctx;
   }
   setup();
+  P.wordStart = Date.now();
   const onResize = () => setup();
   addEventListener("resize", onResize);
   cleanup = () => removeEventListener("resize", onResize);
@@ -401,7 +478,7 @@ function startPicto(s) {
     ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(p.x, p.y); ctx.stroke();
     P.last = p;
   }
-  function up() { if (!P.drawing) return; P.drawing = false; if (!P.erase) runGuess(); }
+  function up() { if (!P.drawing) return; P.drawing = false; if (!P.erase) { P.strokes++; runGuess(); } }
   canvas.addEventListener("mousedown", down); canvas.addEventListener("mousemove", move);
   canvas.addEventListener("mouseup", up); canvas.addEventListener("mouseleave", up);
   canvas.addEventListener("touchstart", down, { passive: false });
@@ -410,9 +487,9 @@ function startPicto(s) {
 
   function setMood(m) { $("pMascot").innerHTML = mascot(m, 56); }
 
-  function clearCanvas() { setup(); P.found = false; P.guess = null; P.thinking = false;
+  function clearCanvas() { setup(); P.found = false; P.guess = null; P.thinking = false; P.strokes = 0; P.wordStart = Date.now();
     $("pGuess").innerHTML = `<span class="muted">en attente d'un trait</span>`;
-    $("pSub").textContent = "le modele observe ton croquis"; $("pConf").style.width = "4%"; setMood("idle"); }
+    $("pSub").textContent = "le modele observe ton croquis"; $("pConf").style.width = "4%"; $("pConf").style.background = ""; setMood("idle"); }
 
   async function runGuess() {
     if (P.found || P.pending) return;
@@ -428,10 +505,14 @@ function startPicto(s) {
       $("pConf").style.width = conf + "%";
       if (isWord) {
         P.found = true; setMood("win");
-        $("pGuess").innerHTML = `<span style="color:var(--accent)">&laquo; ${FR[pred.label]} &raquo; !</span>`;
-        $("pSub").textContent = "Cette fois il a trouve !";
+        const elapsed = (Date.now() - P.wordStart) / 1000;
+        const pts = Math.max(20, Math.round(300 - elapsed * 16 - P.strokes * 8));
+        const thumb = captureThumb();
+        if (pts > P.best.score) { P.best = { score: pts, thumb }; $("pBest").textContent = pts; }
+        $("pGuess").innerHTML = `<span style="color:var(--accent)">&laquo; ${FR[pred.label]} &raquo; ! +${pts}</span>`;
+        $("pSub").textContent = "Trouve ! mot suivant...";
         $("pConf").style.background = "linear-gradient(90deg,var(--p-mint),var(--accent))";
-        const c = centerOf(canvas); fireConfetti(c.x, c.y, { count: 120 });
+        const c = centerOf(canvas); floatPts(c.x, c.y - 20, "+" + pts); fireConfetti(c.x, c.y, { count: 120 });
         setTimeout(nextWord, 1800); // mot suivant automatique
       } else {
         setMood("idle");
