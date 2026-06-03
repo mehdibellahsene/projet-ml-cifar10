@@ -50,9 +50,22 @@ def _clean_name(name) -> str:
 
 def all_top(n: int = 10) -> dict:
     d = _load()
-    duel = sorted(d["duel"], key=lambda e: -e.get("score", 0))[:n]
+    # meme pseudo -> ne montrer que son meilleur resultat
+    duel, seen = [], set()
+    for e in sorted(d["duel"], key=lambda e: -e.get("score", 0)):
+        if e.get("name") in seen:
+            continue
+        seen.add(e.get("name")); duel.append(e)
+        if len(duel) >= n:
+            break
     picto_sorted = sorted(d["picto"], key=lambda e: e.get("time", 1e9))
-    fastest = picto_sorted[:n]
+    fastest, seen = [], set()
+    for e in picto_sorted:
+        if e.get("name") in seen:
+            continue
+        seen.add(e.get("name")); fastest.append(e)
+        if len(fastest) >= n:
+            break
     by_cat: dict = {}
     for e in picto_sorted:           # deja trie par temps croissant -> 1er vu = plus rapide
         c = e.get("category")
@@ -78,7 +91,12 @@ def submit(game: str, name: str, score=None, time=None, category=None, image=Non
             entry = {"name": name, "score": score}
             d["duel"].append(entry)
             d["duel"].sort(key=lambda e: -e["score"])
-            d["duel"] = d["duel"][:DUEL_KEEP]
+            seen, uniq = set(), []          # meme pseudo -> garder le meilleur score
+            for e in d["duel"]:
+                if e["name"] in seen:
+                    continue
+                seen.add(e["name"]); uniq.append(e)
+            d["duel"] = uniq[:DUEL_KEEP]
             _save(d)
             rank = next((i for i, e in enumerate(d["duel"]) if e is entry), None)
             return {"rank": rank if (rank is not None and rank < 10) else None}
@@ -98,7 +116,13 @@ def submit(game: str, name: str, score=None, time=None, category=None, image=Non
             entry["image"] = image
         d["picto"].append(entry)
         d["picto"].sort(key=lambda e: e["time"])
-        d["picto"] = d["picto"][:PICTO_KEEP]
+        seen, uniq = set(), []              # meme pseudo + categorie -> garder le plus rapide
+        for e in d["picto"]:
+            k = (e["name"], e["category"])
+            if k in seen:
+                continue
+            seen.add(k); uniq.append(e)
+        d["picto"] = uniq[:PICTO_KEEP]
         d["history"].append(dict(entry))            # historique (ordre d'arrivee)
         d["history"] = d["history"][-HISTORY_KEEP:]
         _save(d)

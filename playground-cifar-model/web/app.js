@@ -337,6 +337,14 @@ const JOKERS = [
   { type: "blind", label: "Aveugler l'IA",  cls: "jk-pink", msg: "IA debranchee au prochain tour !" },
   { type: "addq",  add: 3, label: "+3 questions", cls: "jk-mint", msg: "+3 questions ajoutees !" },
 ];
+// pseudo "Nono" : mode triche — uniquement des boosters surpuissants
+const NONO_JOKERS = [
+  { type: "mult", mult: 100,    label: "x100",    cls: "jk-gold", msg: "Booster x100 arme !" },
+  { type: "mult", mult: 1000,   label: "x1000",   cls: "jk-gold", msg: "Booster x1000 arme !" },
+  { type: "mult", mult: 10000,  label: "x10000",  cls: "jk-gold", msg: "Booster x10000 arme !!!" },
+  { type: "pts",  add: 100000,  label: "+100 000 pts", cls: "jk-mint", msg: "+100 000 points cadeaux !" },
+];
+const isNono = () => (localStorage.getItem("mlp_name") || "").trim().toLowerCase() === "nono";
 function startDuel(s) {
   const S = { imgs: [], i: 0, me: 0, ai: 0, score: 0, total: 10, roundStart: 0, phase: "load",
               picked: null, timer: null, advance: null, aiP: null,
@@ -363,11 +371,13 @@ function startDuel(s) {
   /* ----- jokers facon casino : popent sur les cotes, a cliquer ----- */
   function scheduleJoker() {
     clearTimeout(S.jokerTimer);
-    S.jokerTimer = setTimeout(() => { if (S.phase === "play") spawnJoker(); scheduleJoker(); }, 2600 + Math.random() * 3800);
+    const delay = isNono() ? 1000 + Math.random() * 1800 : 2600 + Math.random() * 3800;
+    S.jokerTimer = setTimeout(() => { if (S.phase === "play") spawnJoker(); scheduleJoker(); }, delay);
   }
-  function spawnJoker() {
-    if (S.jokerEls.length >= 2) return;
-    const j = JOKERS[Math.floor(Math.random() * JOKERS.length)];
+  function spawnJoker(force) {
+    if (!force && S.jokerEls.length >= 2) return;
+    const pool = isNono() ? NONO_JOKERS : JOKERS;
+    const j = pool[Math.floor(Math.random() * pool.length)];
     const el = document.createElement("button");
     el.className = "joker " + j.cls;
     el.innerHTML = `<span class="jk-l">${j.label}</span>`;
@@ -384,6 +394,11 @@ function startDuel(s) {
     else if (j.type === "mult") S.mult = j.mult;
     else if (j.type === "blind") S.blind = true;
     else if (j.type === "addq") { S.total += j.add; if ($("dRound")) $("dRound").textContent = `Manche ${S.i + 1} / ${S.total}`; }
+    else if (j.type === "pts") {       // points cadeaux (mode Nono)
+      S.score += j.add;
+      const c = centerOf(s.querySelector(".imgframe"));
+      floatPts(c.x, c.y - 30, "+" + j.add.toLocaleString("fr-FR"));
+    }
     toast(j.msg);
     updateEffects();
   }
@@ -407,10 +422,13 @@ function startDuel(s) {
       </div>
       <div class="timerbar" id="dTimerWrap"><i id="dTimer"></i></div>
       <div id="dEffects" class="effects"></div>
+      ${isNono() ? `<div style="text-align:center;margin-top:8px"><button class="btn" id="dCheat" style="font-size:14px;padding:8px 16px">&#127920; Booster</button></div>` : ""}
       <div class="imgframe"><img id="dImg" alt="image a reconnaitre"></div>
       <div class="opt-grid" id="dOpts"></div>
       <div class="verdict" id="dVerdict"></div>
       <div id="dNext" style="text-align:center;margin-top:18px"></div>`;
+    const cheat = $("dCheat");
+    if (cheat) cheat.onclick = () => spawnJoker(true);
     showRound();
   }
 
