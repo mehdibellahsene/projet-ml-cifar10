@@ -19,7 +19,8 @@ LB_PATH = os.environ.get("LB_PATH", "lbdata/leaderboard.json")
 CATEGORIES = ["airplane", "automobile", "bird", "cat", "deer",
               "dog", "frog", "horse", "ship", "truck"]
 DUEL_KEEP = 10
-PICTO_KEEP = 80      # assez pour couvrir top 10 + 1er de chaque categorie
+PICTO_KEEP = 40      # assez pour couvrir top 10 + 1er de chaque categorie
+HISTORY_KEEP = 30    # galerie "mentions honorables" : derniers dessins devines
 _lock = threading.Lock()
 
 
@@ -31,6 +32,7 @@ def _load() -> dict:
         data = {}
     data.setdefault("duel", [])
     data.setdefault("picto", [])
+    data.setdefault("history", [])
     return data
 
 
@@ -56,7 +58,8 @@ def all_top(n: int = 10) -> dict:
         c = e.get("category")
         if c and c not in by_cat:
             by_cat[c] = e
-    return {"duel": duel, "picto_fastest": fastest, "picto_by_cat": by_cat}
+    history = list(reversed(d["history"]))[:24]   # plus recents d'abord
+    return {"duel": duel, "picto_fastest": fastest, "picto_by_cat": by_cat, "picto_history": history}
 
 
 def submit(game: str, name: str, score=None, time=None, category=None, image=None) -> dict:
@@ -96,6 +99,8 @@ def submit(game: str, name: str, score=None, time=None, category=None, image=Non
         d["picto"].append(entry)
         d["picto"].sort(key=lambda e: e["time"])
         d["picto"] = d["picto"][:PICTO_KEEP]
+        d["history"].append(dict(entry))            # historique (ordre d'arrivee)
+        d["history"] = d["history"][-HISTORY_KEEP:]
         _save(d)
 
         rank = next((i for i, e in enumerate(d["picto"]) if e is entry), None)
@@ -112,9 +117,8 @@ def reset(game: str | None = None, name: str | None = None) -> None:
     d'un pseudo donne sans toucher au reste."""
     with _lock:
         d = _load()
-        for g in ("duel", "picto"):
-            if game is not None and g != game:
-                continue
+        lists = ["duel"] if game == "duel" else ["picto", "history"] if game == "picto" else ["duel", "picto", "history"]
+        for g in lists:
             if name is not None:
                 d[g] = [e for e in d[g] if e.get("name") != name]
             else:

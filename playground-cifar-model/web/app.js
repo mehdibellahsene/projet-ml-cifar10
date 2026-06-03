@@ -220,6 +220,18 @@ function lbByCat(byCat) {
   }).join("");
   return `<div class="lb-card" style="margin-top:22px"><h3><span class="ti">${icon("brush", 15)}</span>Champions par categorie</h3><div class="cat-grid">${cells}</div></div>`;
 }
+function lbHonor(entries) {
+  if (!entries || !entries.length)
+    return `<div class="lb-card" style="margin-top:22px"><h3><span class="ti">${icon("brush", 15)}</span>Mentions honorables</h3><p class="lb-empty">Les dessins devines apparaitront ici.</p></div>`;
+  const items = entries.map((e) => `<div class="honor-item">
+      ${e.image ? `<img src="${e.image}" alt="">` : `<div class="honor-ph">?</div>`}
+      <div class="honor-cap"><b>${esc(e.name)}</b><br>${FR[e.category] || ""} &middot; ${Number(e.time).toFixed(2)} s</div>
+    </div>`).join("");
+  return `<div class="lb-card" style="margin-top:22px">
+    <h3><span class="ti">${icon("brush", 15)}</span>Mentions honorables</h3>
+    <p class="lb-sub" style="margin:-6px 0 10px">Tous les dessins devines, meme les moins rapides &middot; defile &rarr;</p>
+    <div class="honor-strip">${items}</div></div>`;
+}
 
 /* ---------------- theme (fixe : cahier) ---------------- */
 function applyTheme() {
@@ -280,7 +292,8 @@ function renderHome(s) {
       ${card("var(--p-mint)", "scope", TXT.cinicName, TXT.cinicTag, "cinic")}
     </div>
     <div id="lbWrap" class="lb-wrap"></div>
-    <div id="lbCat"></div></div>`;
+    <div id="lbCat"></div>
+    <div id="lbHonor"></div></div>`;
   s.querySelectorAll(".game-card").forEach((c) => (c.onclick = () => go(c.dataset.go)));
   const hn = $("homeName");
   hn.value = localStorage.getItem("mlp_name") || "";
@@ -302,6 +315,7 @@ function renderHome(s) {
   fetchLeaderboard().then((lb) => {
     if ($("lbWrap")) $("lbWrap").innerHTML = lbDuel(lb.duel || []) + lbFastest(lb.picto_fastest || []);
     if ($("lbCat")) $("lbCat").innerHTML = lbByCat(lb.picto_by_cat || {});
+    if ($("lbHonor")) $("lbHonor").innerHTML = lbHonor(lb.picto_history || []);
     onScroll();
   });
   setTimeout(onScroll, 60);
