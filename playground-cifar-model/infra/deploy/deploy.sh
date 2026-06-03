@@ -18,12 +18,13 @@ APP_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$APP_DIR"
 
 # --- verrou : un seul deploiement a la fois ---
-LOCK="/tmp/deploy-${IMAGE}.lock"
-exec 9>"$LOCK"
-if ! flock -n 9; then
+# Verrou par mkdir (atomique et portable : macOS n'a pas `flock`).
+LOCK_DIR="/tmp/deploy-${IMAGE}.lock.d"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   echo "Un autre deploiement est en cours, abandon." >&2
   exit 1
 fi
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
 log() { echo "[deploy] $*"; }
 
