@@ -543,8 +543,8 @@ function startPicto(s) {
     <p class="picto-head" style="text-align:center;color:var(--muted);max-width:680px;margin:0 auto 22px;font-size:16px"><span class="game-intro-txt">${TXT.pictoIntro} </span>Ton mot : <span class="prompt-chip" id="pWord" style="font-size:16px;padding:4px 12px"></span></p>
     <div class="picto-layout">
       <div class="draw-card"><canvas id="pCanvas"></canvas></div>
-      <div style="display:flex;flex-direction:column;gap:22px">
-        <div class="panel" style="padding:20px 18px">
+      <div class="picto-side">
+        <div class="panel p-guess">
           <div class="guess-stage">
             <div class="stopwatch" id="pTime">0.00 s</div>
             <div style="display:flex;justify-content:center;margin:6px 0 8px" id="pMascot">${mascot("idle", 56)}</div>
@@ -553,7 +553,7 @@ function startPicto(s) {
             <div class="confbar"><i id="pConf" style="width:4%"></i></div>
           </div>
         </div>
-        <div class="panel" style="padding:18px">
+        <div class="panel p-tools">
           <p class="field-label">Couleurs</p>
           <div class="palette" id="pPalette"></div>
           <p class="field-label" style="margin-top:18px">Outil</p>
@@ -568,10 +568,10 @@ function startPicto(s) {
             <button class="btn" id="pNew" style="flex:1;font-size:15px;padding:11px 14px">${icon("dice", 16, "vertical-align:-3px;margin-right:6px")}Autre mot</button>
           </div>
         </div>
-        <div class="panel" style="padding:16px 18px">
+        <div class="panel p-name">
           <p class="field-label">Ton pseudo</p>
           <input id="pName" class="lb-input" maxlength="16" placeholder="Anonyme" style="width:100%">
-          <p class="field-label" style="margin:10px 0 0">Plus tu fais deviner vite, mieux c'est. Ton temps et ton dessin sont enregistres au classement quand l'IA trouve.</p>
+          <p class="field-label p-hint" style="margin:10px 0 0">Plus tu fais deviner vite, mieux c'est. Ton temps et ton dessin sont enregistres au classement quand l'IA trouve.</p>
           <div id="pRecord" style="margin-top:10px;font-weight:800;min-height:20px"></div>
         </div>
       </div>
