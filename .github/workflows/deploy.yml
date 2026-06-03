@@ -1,0 +1,27 @@
+name: Deploy ML Playground
+
+# Deploiement sur le Mac mini auto-heberge a chaque push sur `production`.
+# Le runner self-hosted execute le script srv (build + expose).
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ml-playground
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy (build + expose via srv)
+        working-directory: playground-cifar-model
+        env:
+          PUBLIC_HOST: machine-learning.bellahsene.org
+          PUBLIC_PORT: "8771"
+          DEPLOY_BRANCH: production
+        run: make deploy

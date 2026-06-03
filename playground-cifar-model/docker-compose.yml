@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    image: ml-model-detection:latest
+    container_name: ml-model-detection
+    restart: unless-stopped
+    environment:
+      - PORT=${PUBLIC_PORT:-8771}
+    ports:
+      - "${PUBLIC_PORT:-8771}:${PUBLIC_PORT:-8771}"
+    networks:
+      - default
+      - bmr-internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:${PUBLIC_PORT:-8771}/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+networks:
+  bmr-internal:
+    external: true

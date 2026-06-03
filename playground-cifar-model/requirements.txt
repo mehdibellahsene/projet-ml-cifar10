@@ -1,0 +1,7 @@
+fastapi==0.115.*
+uvicorn[standard]==0.32.*
+python-multipart==0.0.12
+pillow>=10.4
+# TensorFlow 2.21 : version qui a valide le chargement de transfer_model.keras.
+# (Keras 3 est inclus dans tensorflow >= 2.16.)
+tensorflow==2.21.*

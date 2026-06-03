@@ -1,0 +1,17 @@
+# --- Python ---
+__pycache__/
+**/__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# --- Modele duplique ---
+# La copie de reference utilisee par l'app est playground-cifar-model/model/transfer_model.keras
+# (versionnee). On evite de committer deux fois le meme fichier de 48 Mo.
+report_assets/transfer_model.keras
+
+# --- Divers ---
+.DS_Store
+Thumbs.db
+*.log

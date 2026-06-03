@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Playground CIFAR-10 — Humain vs Machine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1 id="logo">ML Playground</h1>
+    <p class="subtitle">
+      Un CNN (EfficientNetB5) entraine sur CIFAR-10 a <strong>~97,9 %</strong>.
+      Trois mini-jeux pour le defier.
+    </p>
+  </header>
+
+  <!-- ===================== HUB ===================== -->
+  <section id="home" class="view active">
+    <div class="hub">
+      <button class="game-card" data-go="duel">
+        <span class="emoji">VS</span>
+        <span class="game-title">Le Duel</span>
+        <span class="game-desc">Humain contre Machine. 3 secondes par image, 10 manches. Qui devine le mieux ?</span>
+      </button>
+      <button class="game-card" data-go="pictionary">
+        <span class="emoji">Paint</span>
+        <span class="game-title">Crash Test Pictionary</span>
+        <span class="game-desc">Dessine, et regarde l'IA paniquer en temps reel pour deviner ton croquis.</span>
+      </button>
+      <button class="game-card" data-go="cinic">
+        <span class="emoji">Alien</span>
+        <span class="game-title">Test Ultime CINIC-10</span>
+        <span class="game-desc">Des images qu'il n'a jamais vues. Sauras-tu reperer ou il se trompe ?</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== DUEL ===================== -->
+  <section id="duel" class="view">
+    <button class="back" data-go="home">&larr; Accueil</button>
+    <h2>Le Duel : Humain vs Machine</h2>
+
+    <div id="duel-intro" class="center">
+      <p class="hint">10 images. Tu as <strong>3 secondes</strong> pour cliquer la bonne categorie.
+        L'IA repond en meme temps. Le plus precis gagne.</p>
+      <button id="duel-start" class="btn primary">Lancer le duel</button>
+    </div>
+
+    <div id="duel-play" class="hidden">
+      <div class="duel-top">
+        <div class="duel-score">Toi <strong id="duel-you">0</strong></div>
+        <div class="duel-progress">Image <span id="duel-idx">1</span>/10</div>
+        <div class="duel-score">IA <strong id="duel-ia">0</strong></div>
+      </div>
+      <div class="timer-bar"><span id="duel-timer"></span></div>
+      <div class="duel-stage">
+        <img id="duel-img" alt="image a classer" />
+      </div>
+      <div id="duel-choices" class="choices"></div>
+      <div id="duel-feedback" class="duel-feedback"></div>
+    </div>
+
+    <div id="duel-end" class="hidden center">
+      <h3 id="duel-verdict"></h3>
+      <div class="final-score">
+        <div>Toi<br /><span id="duel-final-you">0</span>/10</div>
+        <div>IA<br /><span id="duel-final-ia">0</span>/10</div>
+      </div>
+      <button id="duel-again" class="btn primary">Rejouer</button>
+    </div>
+  </section>
+
+  <!-- ===================== PICTIONARY ===================== -->
+  <section id="pictionary" class="view">
+    <button class="back" data-go="home">&larr; Accueil</button>
+    <h2>Crash Test Pictionary</h2>
+    <p class="hint">Dessine <strong id="picto-target">une grenouille</strong>.
+      Le modele (entraine sur des photos 32x32) tente de deviner a chaque trait.
+      Spoiler : il va galerer.</p>
+
+    <div class="picto-wrap">
+      <canvas id="picto-canvas" width="280" height="280"></canvas>
+      <div class="picto-side">
+        <div class="guess-big" id="picto-guess">...</div>
+        <div class="bar big"><span id="picto-bar"></span></div>
+        <div id="picto-conf" class="muted">en attente d'un trait</div>
+        <div class="picto-buttons">
+          <button id="picto-clear" class="btn">Effacer</button>
+          <button id="picto-new" class="btn">Autre mot</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CINIC ===================== -->
+  <section id="cinic" class="view">
+    <button class="back" data-go="home">&larr; Accueil</button>
+    <h2>Test Ultime CINIC-10</h2>
+    <p class="hint">3 images <strong>CINIC-10</strong> (issues d'ImageNet, jamais vues a l'entrainement).
+      Clique pour reveler la prediction du modele.</p>
+    <div class="scoreboard">
+      <span>Modele correct : <strong id="cinic-score">0</strong></span>
+      <span>Images testees : <strong id="cinic-total">0</strong></span>
+    </div>
+    <div id="cinic-cards" class="cards"></div>
+    <div class="center"><button id="cinic-new" class="btn primary">Nouvelle manche</button></div>
+  </section>
+
+  <footer>
+    <span id="status" class="status"></span>
+    <span>EfficientNetB5 &middot; projet ML CIFAR-10</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

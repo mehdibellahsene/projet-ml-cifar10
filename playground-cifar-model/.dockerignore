@@ -1,0 +1,12 @@
+**/__pycache__/
+**/*.pyc
+.git
+.github
+infra
+Makefile
+README.md
+*.md
+.dockerignore
+.gitignore
+.venv
+venv
