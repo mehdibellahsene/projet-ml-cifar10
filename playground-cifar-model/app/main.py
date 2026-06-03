@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import io
 import os
+import mimetypes
 
 import numpy as np
 from PIL import Image
@@ -28,6 +29,9 @@ from . import leaderboard as lb
 app = FastAPI(title="Playground CIFAR-10", docs_url=None, redoc_url=None)
 
 WEB_DIR = os.environ.get("WEB_DIR", "web")
+
+# certains conteneurs ne connaissent pas .webp -> on l'enregistre pour StaticFiles
+mimetypes.add_type("image/webp", ".webp")
 
 
 @app.middleware("http")
