@@ -33,7 +33,7 @@ body {
 }
 
 /* ---------- conteneur fluide (mobile-first) ---------- */
-header { text-align: center; padding: 1.3rem 1rem 0.3rem; max-width: 880px; margin: 0 auto; }
+header { text-align: center; padding: 1.3rem 1rem 0.3rem; max-width: 1000px; margin: 0 auto; }
 #logo {
   margin: 0; cursor: pointer; color: var(--ink);
   font-family: "Caveat", cursive; font-weight: 700;
@@ -42,7 +42,7 @@ header { text-align: center; padding: 1.3rem 1rem 0.3rem; max-width: 880px; marg
 .subtitle { color: var(--ink-soft); font-size: 1rem; margin: 0.2rem 0 0; }
 .subtitle strong { color: var(--ink); }
 
-.view { display: none; max-width: 880px; margin: 0.5rem auto; padding: 0 1rem 1rem; }
+.view { display: none; max-width: 1000px; margin: 0.5rem auto; padding: 0 1rem 1rem; }
 .view.active { display: block; animation: fade 0.3s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
@@ -200,8 +200,29 @@ h3 { font-family: "Caveat", cursive; font-size: 1.9rem; margin: 0.4rem 0; }
 .card-body .ko { color: var(--danger); }
 
 footer {
-  max-width: 880px; margin: 1.5rem auto; padding: 1rem;
+  max-width: 1000px; margin: 1.5rem auto; padding: 1rem;
   display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between;
   color: var(--ink-soft); font-size: 0.9rem; border-top: 2px dashed var(--ink-soft);
 }
 .status.err { color: var(--danger); }
+
+/* ---------- badge de touche clavier (Duel, visible au clavier/souris) ---------- */
+.choice .key {
+  display: none;
+  width: 1.5em; height: 1.5em; margin-right: 0.45em; vertical-align: middle;
+  border: 2px solid var(--ink-soft); border-radius: 50%;
+  font-size: 0.78em; line-height: 1.45em; text-align: center; color: var(--ink-soft);
+}
+@media (hover: hover) and (pointer: fine) {
+  .choice .key { display: inline-block; }
+}
+
+/* ---------- confort grand ecran (desktop) ---------- */
+@media (min-width: 1000px) {
+  #logo { font-size: 3.4rem; }
+  .subtitle { font-size: 1.1rem; }
+  .game-desc { font-size: 1rem; }
+  .duel-stage img { width: 340px; }
+  #picto-canvas { width: min(52vw, 580px); }
+  .picto-side { width: 300px; }
+}

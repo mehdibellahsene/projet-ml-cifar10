@@ -96,15 +96,24 @@ function duelBuildChoices(truth) {
   const opts = shuffle([truth, ...distractors]);
   const box = $("duel-choices");
   box.innerHTML = "";
-  opts.forEach((c) => {
+  opts.forEach((c, i) => {
     const b = document.createElement("button");
     b.className = "choice";
-    b.textContent = FR[c];
+    b.innerHTML = `<span class="key">${i + 1}</span>${FR[c]}`;
     b.dataset.cls = c;
     b.addEventListener("click", () => duelAnswer(c));
     box.appendChild(b);
   });
 }
+
+// Raccourcis clavier 1/2/3 pour le Duel (desktop).
+document.addEventListener("keydown", (e) => {
+  if (!$("duel").classList.contains("active") || duel.answered) return;
+  const idx = { "1": 0, "2": 1, "3": 2 }[e.key];
+  if (idx === undefined) return;
+  const btn = document.querySelectorAll("#duel-choices .choice")[idx];
+  if (btn) btn.click();
+});
 
 function duelShow() {
   const item = duel.images[duel.idx];
