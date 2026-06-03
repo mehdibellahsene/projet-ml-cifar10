@@ -507,6 +507,51 @@ table.lb td { vertical-align: middle; }
 .wrap { overflow-x: clip; }
 
 /* ============================================================
+   Jeux "plein ecran" : aucun scroll de page, tout tient dans
+   l'ecran quelle que soit sa taille. L'image du duel et le canvas
+   du picto absorbent l'espace restant ; si l'ecran est vraiment
+   minuscule, le corps du jeu scrolle en interne (jamais la page).
+   ============================================================ */
+body[data-screen="duel"], body[data-screen="picto"], body[data-screen="cinic"] {
+  height: 100vh; height: 100dvh; overflow: hidden;
+}
+body[data-screen="duel"] .topbar, body[data-screen="picto"] .topbar, body[data-screen="cinic"] .topbar,
+body[data-screen="duel"] .foot, body[data-screen="picto"] .foot, body[data-screen="cinic"] .foot,
+body[data-screen="duel"] .game-intro, body[data-screen="cinic"] .game-intro,
+body[data-screen="picto"] .game-intro-txt { display: none; }
+body[data-screen="duel"] .wrap, body[data-screen="picto"] .wrap, body[data-screen="cinic"] .wrap {
+  height: 100%; display: flex; flex-direction: column; padding: 10px 18px 12px;
+}
+body[data-screen="duel"] #screen, body[data-screen="picto"] #screen, body[data-screen="cinic"] #screen {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+}
+body[data-screen="duel"] .screen-head, body[data-screen="picto"] .screen-head, body[data-screen="cinic"] .screen-head { margin: 0 0 10px; }
+
+/* duel : l'image absorbe l'espace libre, la zone "suivant" est reservee
+   pour que l'image ne saute pas au moment du verdict */
+body[data-screen="duel"] #duelBody { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+body[data-screen="duel"] .duel-bar { margin-bottom: 8px; }
+body[data-screen="duel"] .imgframe {
+  flex: 1 1 140px; min-height: 90px; height: auto; width: auto;
+  aspect-ratio: 1; align-self: center; margin: 8px auto; padding: 10px;
+  max-width: min(86vw, 360px);
+}
+body[data-screen="duel"] .opt-grid { gap: 8px; }
+body[data-screen="duel"] .opt-btn { padding: 10px 16px; font-size: 17px; }
+body[data-screen="duel"] .verdict { margin-top: 8px; min-height: 22px; }
+body[data-screen="duel"] #dNext { margin-top: 8px !important; min-height: 92px; }
+
+/* picto : le canvas se cale sur la hauteur disponible */
+body[data-screen="picto"] #pictoBody { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+body[data-screen="picto"] .picto-head { margin: 0 auto 8px; }
+body[data-screen="picto"] .picto-layout { flex: 1; min-height: 0; }
+body[data-screen="picto"] .draw-card { width: min(100%, calc(100dvh - 175px)); margin: 0 auto; align-self: start; }
+
+/* cinic : tout tient aussi */
+body[data-screen="cinic"] #cinicBody { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+body[data-screen="cinic"] .stat-row { margin: 0 0 14px; }
+
+/* ============================================================
    Mobile : tout doit tenir dans la hauteur de l'ecran.
    En jeu (body[data-screen=duel|picto|cinic]) l'en-tete se replie.
    ============================================================ */
@@ -525,13 +570,20 @@ table.lb td { vertical-align: middle; }
   .crumb { padding: 7px 12px; font-size: 13px; }
   .picto-head { margin: 0 auto 12px; }
 
-  /* duel compact : l'image se cale sur la hauteur restante */
+  /* duel compact */
   .duel-bar { margin-bottom: 8px; gap: 10px; }
   .score-chip .num { font-size: 24px; }
-  .imgframe { margin: 12px auto; width: min(80vw, 34vh); padding: 8px; border-radius: 14px; }
   .opt-grid { gap: 8px; }
   .opt-btn { padding: 11px 14px; font-size: 17px; }
   .verdict { margin: 10px 0 0; font-size: 14px; }
+
+  /* cinic compact : 3 cartes cote a cote, tout a l'ecran */
+  body[data-screen="cinic"] .cinic-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  body[data-screen="cinic"] .polaroid { padding: 6px 6px 0; }
+  body[data-screen="cinic"] .polaroid .cap { padding: 8px 2px 10px; min-height: 40px; }
+  body[data-screen="cinic"] .tag { font-size: 11px; padding: 3px 8px; }
+  body[data-screen="cinic"] .stat-row { gap: 16px; margin: 0 0 10px; }
+  body[data-screen="cinic"] .stat .n { font-size: 24px; }
 
   /* jokers + fleche : plus discrets sur petit ecran */
   .joker { font-size: 15px; padding: 10px 12px; }
@@ -554,7 +606,12 @@ table.lb td { vertical-align: middle; }
   .guess-word { font-size: 19px; min-height: 24px; }
   .guess-sub { font-size: 12px; margin-top: 0; }
   .confbar { margin-top: 6px; height: 8px; }
-  .draw-card { order: 3; width: min(100%, 44vh); margin: 0 auto; padding: 8px; }
-  .p-tools { order: 4; padding: 12px 14px; }
-  .p-tools .field-label { margin-bottom: 6px; }
+  body[data-screen="picto"] .draw-card {
+    order: 3; flex: 1 1 140px; min-height: 100px; width: auto; max-width: 100%;
+    margin: 0; padding: 8px; display: flex; justify-content: center;
+  }
+  body[data-screen="picto"] .draw-card canvas { width: auto; height: 100%; max-width: 100%; }
+  .p-tools { order: 4; padding: 10px 14px; }
+  .p-tools .field-label { display: none; }   /* gagne de la place : icones explicites */
+  .p-tools .toolrow { margin-top: 8px !important; }
 }
