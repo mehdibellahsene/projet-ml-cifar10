@@ -963,7 +963,10 @@ def build_report(results):
     pdf.f("", 12); pdf.cell(0, 6, pdf.t(_AUTHOR), align="C"); pdf.ln(7)
     pdf.f("I", 10.5); pdf.set_text_color(*_GREY)
     pdf.cell(0, 5, pdf.t("Methodologie CRISP-DM  .  Python / TensorFlow / Keras  .  Juin 2026"), align="C")
-    pdf.ln(16); pdf.set_text_color(*_BLACK); pdf.f("B", 10.5)
+    pdf.ln(7); pdf.f("", 10.5); pdf.set_text_color(*_BLACK)
+    pdf.cell(0, 5, pdf.t("Application : https://machine-learning.bellahsene.org"), align="C",
+             link="https://machine-learning.bellahsene.org")
+    pdf.ln(14); pdf.set_text_color(*_BLACK); pdf.f("B", 10.5)
     pdf.cell(0, 6, pdf.t("Resume"), align="C"); pdf.ln(7)
     best_txt = ""
     if bench:
@@ -1003,7 +1006,8 @@ def build_report(results):
     pdf.bullet("Evaluation : tableau de performances, courbes d'apprentissage et analyse "
                "comparative des resultats (section 4).")
     pdf.bullet("Deploiement : selection du modele retenu (section 5) et extensions pour la "
-               "precision maximale (sections 6-7) ; un jeu interactif illustre l'usage du modele.")
+               "precision maximale (sections 6-7) ; l'application web ML Playground met le modele "
+               "a l'epreuve (section 8).")
     pdf.h2("1.2 Environnement d'execution et consommation des ressources")
     pdf.p("Les entrainements ont ete realises en Python (TensorFlow / Keras) sur Google Colab, avec "
           "un GPU NVIDIA A100 (80 Go de memoire GPU) dans un environnement a HAUTE MEMOIRE "
@@ -1242,21 +1246,41 @@ def build_report(results):
         pdf.fig("transfer_per_class.png", "Figure. Precision par classe (transfer learning).", required=False)
         pdf.fig("transfer_misclassified.png", "Figure. Exemples mal classes (transfer learning).", required=False)
 
-    # 8. Application interactive (déploiement) — CINIC-10
-    pdf.h1("8. Application interactive : test sur images inedites (CINIC-10)")
-    pdf.p("Phase de deploiement de la methodologie CRISP-DM : un petit jeu interactif met le modele "
-          "a l'epreuve. Tester le modele sur le jeu de test CIFAR-10 s'est revele peu instructif et "
-          "peu ludique -- le modele reconnait presque tout sans difficulte. Pour une demonstration "
-          "plus realiste, le jeu utilise donc CINIC-10 : des images reelles derivees d'ImageNet, "
-          "redimensionnees en 32x32 et JAMAIS vues lors de l'entrainement.")
-    pdf.p("Ces images, fortement compressees au format 32x32, perdent en qualite, ce qui rend la "
-          "reconnaissance nettement plus difficile (donnees hors distribution). Le modele s'en sort "
-          "neanmoins bien lors des tests manuels, ce qui demontre une reelle capacite de "
-          "generalisation au-dela du jeu d'entrainement. L'utilisateur teste les images une a une "
-          "(trois propositions, un bouton par image) et un score est tenu a jour en direct.")
-    pdf.fig("game_screenshot.png",
-            "Figure. Jeu interactif : le modele teste sur des images CINIC-10 inedites (issues d'ImageNet).",
-            w=175, required=False)
+    # 8. ML Playground (déploiement) : mise à l'épreuve du modèle
+    pdf.h1("8. ML Playground : mise a l'epreuve du modele")
+    pdf.p("Phase de deploiement de la methodologie CRISP-DM : le modele de transfer learning "
+          "(section 7) est mis en production dans ML Playground, une application web developpee "
+          "pour le projet (backend FastAPI, frontend statique, deploiement Docker), accessible en "
+          "ligne sur https://machine-learning.bellahsene.org. L'interface est adaptee a la fois au "
+          "web et au mobile.")
+    pdf.p("De l'entrainement a l'usage reel : le modele entraine et evalue sur Colab (sections 4 a "
+          "7) est sauvegarde au format Keras avec son pre-traitement integre au graphe "
+          "(agrandissement 32x32 -> 456x456 et normalisation EfficientNet). L'application n'a donc "
+          "qu'a lui envoyer une image 32x32 brute : un backend FastAPI charge le modele et expose "
+          "une API de prediction, un frontend leger interroge cette API, et le tout est "
+          "conteneurise avec Docker puis deploye sur un serveur auto-heberge. La theorie -- "
+          "courbes d'apprentissage, matrices de confusion -- devient ainsi un usage concret : "
+          "chaque clic des joueurs declenche une vraie inference du modele. Trois mini-jeux "
+          "mettent le modele a l'epreuve, chacun sous un angle different :")
+    pdf.bullet("Le Duel -- humain contre machine : 10 manches, 3 secondes par image pour choisir "
+               "la bonne classe parmi trois propositions ; l'IA repond en parallele a la meme "
+               "image et les scores sont compares en direct.")
+    pdf.bullet("Dessine, je devine : l'utilisateur dessine la classe imposee sur un canvas et le "
+               "modele devine en temps reel, trait apres trait. Parfois quelques bonnes couleurs "
+               "suffisent pour qu'il trouve ; parfois il faut etre plus artistique et pointu, car "
+               "un dessin est tres loin des photos 32x32 vues a l'entrainement.")
+    pdf.bullet("Test Ultime CINIC-10 : partie pensee pour le correcteur, qui teste le modele sur "
+               "des images generiques issues de CINIC-10 (derivees d'ImageNet) qu'il n'a JAMAIS "
+               "vues a l'entrainement. C'est l'epreuve la plus difficile : ces images ne suivent "
+               "pas toujours les memes criteres de categorisation que CIFAR-10, et l'enjeu est de "
+               "reperer quand le modele se trompe.")
+    pdf.fig("playground_home.png", "Figure. Screen du jeu.", w=170, required=False)
+    pdf.fig("playground_duel_mobile.png", "Figure. Screen du jeu.", w=80, required=False)
+    pdf.p("L'application a tres bien fonctionne : etudiants, amis et famille l'ont testee et se "
+          "sont mis en defi les uns les autres, comme en temoignent les classements de la page "
+          "d'accueil. C'est aussi ce qui m'a fait le plus plaisir dans ce projet : voir "
+          "concretement le resultat de l'effort de la puce A100 -- un modele entraine pendant des "
+          "heures devenu un jeu que chacun peut defier depuis son navigateur ou son telephone.")
 
     # 9. Conclusion
     pdf.h1("9. Conclusion generale")
