@@ -28,18 +28,18 @@ données jusqu'à une application web jouable.
 learning rate et optimiseur. La régularisation (Dropout + BatchNorm) domine,
 et les hachures rouges montrent les configurations qui divergent :
 
-![Heatmap de la grille](report_assets/comparison.png)
+<img src="report_assets/comparison.png" alt="Heatmap de la grille" width="640">
 
 **Sensibilité au learning rate** — Adam est excellent à 0.001 mais diverge
 au-delà ; SGD est plus lent mais robuste ; la BatchNorm stabilise tout :
 
-![Sensibilité au learning rate](report_assets/lr_sensitivity.png)
+<img src="report_assets/lr_sensitivity.png" alt="Sensibilité au learning rate" width="640">
 
 **Matrice de confusion du modèle final (EfficientNetB5, ~97,9 %)** — quasi
 toute la masse sur la diagonale ; il ne reste que les confusions naturelles
 (chat/chien, automobile/camion) :
 
-![Matrice de confusion du modèle final](report_assets/transfer_confusion.png)
+<img src="report_assets/transfer_confusion.png" alt="Matrice de confusion du modèle final" width="520">
 
 ## L'application
 
