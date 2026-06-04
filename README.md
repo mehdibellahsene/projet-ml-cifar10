@@ -30,7 +30,30 @@ Trois mini-jeux qui tapent sur le modèle entraîné :
 2. **Crash Test Pictionary** — dessine, l'IA devine en temps réel.
 3. **Test Ultime CINIC-10** — images jamais vues à l'entraînement.
 
-Détails techniques et déploiement : voir [`playground-cifar-model/README.md`](playground-cifar-model/README.md).
+Détails techniques : voir [`playground-cifar-model/README.md`](playground-cifar-model/README.md).
+
+## Tester l'application en local
+
+Le modèle entraîné (`transfer_model.keras`, ~48 Mo) est inclus dans le dépôt :
+l'application fonctionne immédiatement après le clone, sans rien entraîner.
+
+```bash
+git clone https://github.com/mehdibellahsene/projet-ml-cifar10.git
+cd projet-ml-cifar10/playground-cifar-model
+pip install -r requirements.txt
+uvicorn app.main:app --port 8771
+```
+
+Puis ouvrir **http://127.0.0.1:8771** dans le navigateur.
+
+Alternative avec Docker (aucune installation Python nécessaire) :
+
+```bash
+cd playground-cifar-model
+docker network create bmr-internal   # réseau attendu par le compose (une seule fois)
+docker compose up --build
+# -> http://127.0.0.1:8771
+```
 
 ## Auteur
 
