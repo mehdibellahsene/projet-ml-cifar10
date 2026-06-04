@@ -723,7 +723,7 @@ class _Report(FPDF):
             if not required:
                 return
             self.f("I", 9); self.set_text_color(*_GREY)
-            self.multi_cell(0, 5, self.t(f"[Figure a generer : {fn}]")); self.ln(2)
+            self.multi_cell(0, 5, self.t(f"[Figure à générer : {fn}]")); self.ln(2)
             self.set_text_color(*_BLACK); return
         # Hauteur d'affichage reelle a partir du ratio de l'image.
         try:
@@ -815,7 +815,7 @@ def _best_lr(bench, lrs):
 
 def _analysis_blocks(bench, lut, model_order, lrs, opts):
     if not bench:
-        return ["[Analyse a completer apres l'entrainement.]"]
+        return ["[Analyse à compléter après l'entraînement.]"]
 
     def mean(pred):
         v = [r["test_accuracy"] for r in bench if pred(r)]
@@ -838,21 +838,21 @@ def _analysis_blocks(bench, lut, model_order, lrs, opts):
                          f"({om(lr, sorted(opts, key=lambda o: om(lr, o), reverse=True)[0])*100:.0f} %)"
                          for lr in lrs)
     v3a, v3s = lut.get(("VGG3", low, "Adam")), lut.get(("VGG3", low, "SGD"))
-    ex = (f" (ex. VGG3 a LR={low} : Adam {v3a['test_accuracy']*100:.1f} % contre SGD "
+    ex = (f" (ex. VGG3 à LR={low} : Adam {v3a['test_accuracy']*100:.1f} % contre SGD "
           f"{v3s['test_accuracy']*100:.1f} %)") if v3a and v3s else ""
     blocks = [
         "Effet de l'architecture. Les performances progressent de CNN1 (LeNet-5) vers les "
-        f"VGG avec la profondeur : {depth}. Empiler des blocs convolutifs accroit la "
-        "capacite d'extraction de caracteristiques, donc la precision, jusqu'a un palier.",
-        "Effet de l'optimiseur. Le meilleur optimiseur depend du learning rate. Au learning "
-        f"rate adapte (LR={low}), Adam surpasse SGD{ex}. Mais a 0.01 et 0.1, Adam devient "
+        f"VGG avec la profondeur : {depth}. Empiler des blocs convolutifs accroît la "
+        "capacité d'extraction de caractéristiques, donc la précision, jusqu'à un palier.",
+        "Effet de l'optimiseur. Le meilleur optimiseur dépend du learning rate. Au learning "
+        f"rate adapté (LR={low}), Adam surpasse SGD{ex}. Mais à 0.01 et 0.1, Adam devient "
         f"instable et diverge, alors que SGD reste robuste : {adam_div} divergence(s) pour "
         f"Adam contre {sgd_div} pour SGD. Gagnant par learning rate : {winners}. Adam est "
-        "le meilleur a faible LR, SGD plus sur a LR eleve.",
-        f"Effet du learning rate. Precision moyenne par LR : {lr_txt} ; meilleur compromis "
-        f"LR={best_lr}. Un LR trop eleve fait diverger Adam (precision ~10 %, niveau du "
+        "le meilleur à faible LR, SGD plus sûr à LR élevé.",
+        f"Effet du learning rate. Précision moyenne par LR : {lr_txt} ; meilleur compromis "
+        f"LR={best_lr}. Un LR trop élevé fait diverger Adam (précision ~10 %, niveau du "
         "hasard) : son pas adaptatif sature la sortie softmax. SGD reste stable. La "
-        "sensibilite au learning rate est une faiblesse d'Adam et une force de SGD.",
+        "sensibilité au learning rate est une faiblesse d'Adam et une force de SGD.",
     ]
     rl = _reg_effect(lut, low, opts)
     if rl:
@@ -871,13 +871,13 @@ def _reg_effect(lut, lr, opts):
 
     def gap(r):
         g = r.get("overfit_gap")
-        return f" (ecart train-test {g*100:.1f} pts)" if g else ""
-    return (f"Effet de la regularisation (VGG3, {o}, LR={lr}). En partant de VGG3 "
+        return f" (écart train-test {g*100:.1f} pts)" if g else ""
+    return (f"Effet de la régularisation (VGG3, {o}, LR={lr}). En partant de VGG3 "
             f"({b['test_accuracy']*100:.1f} %{gap(b)}), l'ajout du Dropout donne "
             f"{d['test_accuracy']*100:.1f} %{gap(d)}, puis l'ajout de la Batch Normalization donne "
-            f"{n['test_accuracy']*100:.1f} %{gap(n)}. La regularisation reduit le surapprentissage ; "
-            "la Batch Normalization stabilise en outre l'entrainement et autorise des learning rates "
-            "plus eleves.")
+            f"{n['test_accuracy']*100:.1f} %{gap(n)}. La régularisation réduit le surapprentissage ; "
+            "la Batch Normalization stabilise en outre l'entraînement et autorise des learning rates "
+            "plus élevés.")
 
 
 def _bn_high_lr(lut, bench, model_order, lrs, opts):
@@ -891,42 +891,42 @@ def _bn_high_lr(lut, bench, model_order, lrs, opts):
         return ""
     bb, ob = max(bn_a), max(oth)
     if bb > 0.5 and (bb - ob) > 0.3:
-        return (f"Batch Normalization et robustesse au learning rate. A LR={high}, seul le modele "
-                f"avec Batch Normalization evite la divergence (jusqu'a {bb*100:.1f} %), tandis que "
+        return (f"Batch Normalization et robustesse au learning rate. À LR={high}, seul le modèle "
+                f"avec Batch Normalization évite la divergence (jusqu'à {bb*100:.1f} %), tandis que "
                 f"les autres s'effondrent au niveau du hasard (au mieux {ob*100:.0f} %). C'est la "
-                "demonstration du benefice central de la BN : en normalisant les activations, elle "
-                "empeche l'explosion des gradients et autorise des learning rates bien plus eleves.")
+                "démonstration du bénéfice central de la BN : en normalisant les activations, elle "
+                "empêche l'explosion des gradients et autorise des learning rates bien plus élevés.")
     return ""
 
 
 def _conclusion_blocks(bench, fm, rm, tm=None):
     parts = [
-        "Ce projet a deroule une demarche complete de classification d'images (CRISP-DM). Le "
-        "pretraitement (normalisation, one-hot) est indispensable a un entrainement stable. Les "
-        "VGG depassent largement CNN1 (LeNet-5), la profondeur ameliorant l'extraction de "
-        "caracteristiques.",
-        "Adam est le plus efficace a faible learning rate mais sensible (il diverge a 0.01 et 0.1) ; "
+        "Ce projet a déroulé une démarche complète de classification d'images (CRISP-DM). Le "
+        "prétraitement (normalisation, one-hot) est indispensable à un entraînement stable. Les "
+        "VGG dépassent largement CNN1 (LeNet-5), la profondeur améliorant l'extraction de "
+        "caractéristiques.",
+        "Adam est le plus efficace à faible learning rate mais sensible (il diverge à 0.01 et 0.1) ; "
         "SGD est plus lent mais robuste. Une valeur faible (0.001) est le meilleur compromis. "
         "Dropout et Batch Normalization limitent le surapprentissage ; la BN autorise en plus des "
-        "learning rates eleves.",
+        "learning rates élevés.",
     ]
     if rm:
-        parts.append(f"Le modele retenu ({ABBREV.get(rm['label'], rm['label'])} / {rm['optimizer']} / "
+        parts.append(f"Le modèle retenu ({ABBREV.get(rm['label'], rm['label'])} / {rm['optimizer']} / "
                      f"LR={rm['learning_rate']}) atteint {rm['test_accuracy']*100:.2f} % sur le test.")
     elif bench:
         b = max(bench, key=lambda r: r["test_accuracy"])
         parts.append(f"La meilleure configuration ({ABBREV.get(b['model'], b['model'])} / {b['optimizer']} "
                      f"/ LR={b['learning_rate']}) atteint {b['test_accuracy']*100:.2f} %.")
     if fm:
-        parts.append(f"En complement (hors enonce), un modele optimise entraine de zero "
+        parts.append(f"En complément (hors énoncé), un modèle optimisé entraîné de zéro "
                      f"(augmentation + filtres croissants) atteint {fm['test_accuracy']*100:.2f} %.")
     if tm:
-        parts.append(f"Enfin, le transfer learning ({tm.get('name', 'EfficientNet')} pre-entraine sur "
-                     f"ImageNet, affine) porte la precision a {tm['test_accuracy']*100:.2f} % — le "
-                     "meilleur resultat du projet, illustrant la puissance du transfert de "
-                     "connaissances par rapport a un entrainement de zero.")
-    parts.append("Pistes : architectures residuelles (ResNet), recherche systematique des "
-                 "hyperparametres, augmentation avancee (MixUp, RandAugment).")
+        parts.append(f"Enfin, le transfer learning ({tm.get('name', 'EfficientNet')} pré-entraîné sur "
+                     f"ImageNet, affiné) porte la précision à {tm['test_accuracy']*100:.2f} % — le "
+                     "meilleur résultat du projet, illustrant la puissance du transfert de "
+                     "connaissances par rapport à un entraînement de zéro.")
+    parts.append("Pistes : architectures résiduelles (ResNet), recherche systématique des "
+                 "hyperparamètres, augmentation avancée (MixUp, RandAugment).")
     return parts
 
 
@@ -956,13 +956,13 @@ def build_report(results):
     pdf._title = True; pdf.add_page(); pdf.ln(26)
     pdf._rule(pdf.get_y(), 0.4); pdf.ln(6)
     pdf.f("B", 19); pdf.set_text_color(*_BLACK)
-    pdf.multi_cell(0, 9, pdf.t("Classification d'images par reseaux de neurones convolutifs (CNN)"), align="C")
+    pdf.multi_cell(0, 9, pdf.t("Classification d'images par réseaux de neurones convolutifs (CNN)"), align="C")
     pdf.ln(2); pdf.f("I", 12)
-    pdf.multi_cell(0, 6.5, pdf.t("Jeu de donnees CIFAR-10 : architectures VGG, optimiseurs, learning rate et regularisation"), align="C")
+    pdf.multi_cell(0, 6.5, pdf.t("Jeu de données CIFAR-10 : architectures VGG, optimiseurs, learning rate et régularisation"), align="C")
     pdf.ln(4); pdf._rule(pdf.get_y(), 0.4); pdf.ln(8)
     pdf.f("", 12); pdf.cell(0, 6, pdf.t(_AUTHOR), align="C"); pdf.ln(7)
     pdf.f("I", 10.5); pdf.set_text_color(*_GREY)
-    pdf.cell(0, 5, pdf.t("Methodologie CRISP-DM  .  Python / TensorFlow / Keras  .  Juin 2026"), align="C")
+    pdf.cell(0, 5, pdf.t("Méthodologie CRISP-DM  .  Python / TensorFlow / Keras  .  Juin 2026"), align="C")
     pdf.ln(7); pdf.f("", 10.5); pdf.set_text_color(*_BLACK)
     pdf.cell(0, 5, pdf.t("Application : https://machine-learning.bellahsene.org"), align="C",
              link="https://machine-learning.bellahsene.org")
@@ -970,100 +970,100 @@ def build_report(results):
     pdf.cell(0, 5, pdf.t("Code source : https://github.com/mehdibellahsene/projet-ml-cifar10"), align="C",
              link="https://github.com/mehdibellahsene/projet-ml-cifar10")
     pdf.ln(13); pdf.set_text_color(*_BLACK); pdf.f("B", 10.5)
-    pdf.cell(0, 6, pdf.t("Resume"), align="C"); pdf.ln(7)
+    pdf.cell(0, 6, pdf.t("Résumé"), align="C"); pdf.ln(7)
     best_txt = ""
     if bench:
         b = max(bench, key=lambda r: r["test_accuracy"])
-        best_txt = (f" La meilleure configuration imposee ({ABBREV.get(b['model'], b['model'])}, "
+        best_txt = (f" La meilleure configuration imposée ({ABBREV.get(b['model'], b['model'])}, "
                     f"{b['optimizer']}, LR={b['learning_rate']}) atteint {b['test_accuracy']*100:.1f} %.")
     if tm:
         best_txt += (f" En allant plus loin, le transfer learning ({tm.get('name', 'EfficientNet')}) "
-                     f"porte la precision a {tm['test_accuracy']*100:.1f} %, le meilleur resultat du "
+                     f"porte la précision à {tm['test_accuracy']*100:.1f} %, le meilleur résultat du "
                      "projet.")
     pdf.set_left_margin(40); pdf.set_right_margin(40); pdf.f("", 10)
     pdf.multi_cell(0, 5.2, pdf.t(
-        "Ce travail etudie la classification d'images CIFAR-10 par CNN. Nous comparons une "
-        "architecture de base (LeNet-5) a des VGG (1 a 3 blocs), evaluons l'effet de l'optimiseur "
-        "(SGD, Adam) et du learning rate, puis l'apport de la regularisation (Dropout, Batch "
+        "Ce travail étudie la classification d'images CIFAR-10 par CNN. Nous comparons une "
+        "architecture de base (LeNet-5) à des VGG (1 à 3 blocs), évaluons l'effet de l'optimiseur "
+        "(SGD, Adam) et du learning rate, puis l'apport de la régularisation (Dropout, Batch "
         "Normalization), selon CRISP-DM." + best_txt), align="J")
     pdf.set_left_margin(22); pdf.set_right_margin(22); pdf._title = False
 
     # 1. Intro
-    pdf.add_page(); pdf.h1("1. Introduction et methodologie")
-    pdf.p("L'objectif de ce projet est d'implementer des reseaux de neurones convolutifs (CNN) "
-          "pour la classification d'images du jeu CIFAR-10 : etude des architectures de type VGG, "
-          "comparaison des optimiseurs SGD et Adam sur trois learning rates, et evaluation des "
-          "techniques de regularisation (Dropout, Batch Normalization).")
-    pdf.h2("1.1 Methodologie CRISP-DM (les six phases)")
-    pdf.p("La demarche suit la methodologie CRISP-DM (Cross-Industry Standard Process for Data "
-          "Mining), un processus iteratif en six phases ; voici comment chacune se concretise dans "
+    pdf.add_page(); pdf.h1("1. Introduction et méthodologie")
+    pdf.p("L'objectif de ce projet est d'implémenter des réseaux de neurones convolutifs (CNN) "
+          "pour la classification d'images du jeu CIFAR-10 : étude des architectures de type VGG, "
+          "comparaison des optimiseurs SGD et Adam sur trois learning rates, et évaluation des "
+          "techniques de régularisation (Dropout, Batch Normalization).")
+    pdf.h2("1.1 Méthodologie CRISP-DM (les six phases)")
+    pdf.p("La démarche suit la méthodologie CRISP-DM (Cross-Industry Standard Process for Data "
+          "Mining), un processus itératif en six phases ; voici comment chacune se concrétise dans "
           "ce projet :")
-    pdf.bullet("Comprehension du probleme : classer des images couleur 32x32 en 10 categories "
-               "mutuellement exclusives (tache de vision par ordinateur).")
-    pdf.bullet("Comprehension des donnees : exploration de CIFAR-10 -- dimensions, exemples "
+    pdf.bullet("Compréhension du problème : classer des images couleur 32x32 en 10 catégories "
+               "mutuellement exclusives (tâche de vision par ordinateur).")
+    pdf.bullet("Compréhension des données : exploration de CIFAR-10 -- dimensions, exemples "
                "visuels, distribution des classes (section 2).")
-    pdf.bullet("Preparation des donnees : normalisation des pixels dans [0,1] et encodage one-hot "
+    pdf.bullet("Préparation des données : normalisation des pixels dans [0,1] et encodage one-hot "
                "des labels (section 2).")
-    pdf.bullet("Modelisation : construction de LeNet-5, VGG1/2/3 et des variantes regularisees ; "
+    pdf.bullet("Modélisation : construction de LeNet-5, VGG1/2/3 et des variantes régularisées ; "
                "choix des optimiseurs et des learning rates (section 3).")
-    pdf.bullet("Evaluation : tableau de performances, courbes d'apprentissage et analyse "
-               "comparative des resultats (section 4).")
-    pdf.bullet("Deploiement : selection du modele retenu (section 5) et extensions pour la "
-               "precision maximale (sections 6-7) ; l'application web ML Playground met le modele "
-               "a l'epreuve (section 8).")
-    pdf.h2("1.2 Environnement d'execution et consommation des ressources")
-    pdf.p("Les entrainements ont ete realises en Python (TensorFlow / Keras) sur Google Colab, avec "
-          "un GPU NVIDIA A100 (80 Go de memoire GPU) dans un environnement a HAUTE MEMOIRE "
-          "(High-RAM, 167 Go de RAM systeme). Cette configuration High-RAM a ete necessaire pour "
-          "entrainer le modele de transfer learning EfficientNetB5 a haute resolution (456x456) sans "
-          "saturation de la memoire. Le transfer learning emploie en outre la precision mixte "
-          "(float16) pour exploiter les Tensor Cores du GPU et accelerer l'entrainement.")
-    pdf.p("Point sur l'execution. La grille des 36 configurations (modeles legers) s'entraine en "
-          "quelques minutes ; a l'inverse, EfficientNetB5 -- le plus gros modele -- sollicite "
-          "fortement le GPU (environ 18 minutes par epoque en fine-tuning a 456x456). La capture "
-          "ci-dessous montre la consommation des ressources (RAM systeme, memoire GPU, disque) "
-          "pendant l'execution sur l'environnement A100 High-RAM.")
+    pdf.bullet("Évaluation : tableau de performances, courbes d'apprentissage et analyse "
+               "comparative des résultats (section 4).")
+    pdf.bullet("Déploiement : sélection du modèle retenu (section 5) et extensions pour la "
+               "précision maximale (sections 6-7) ; l'application web ML Playground met le modèle "
+               "à l'épreuve (section 8).")
+    pdf.h2("1.2 Environnement d'exécution et consommation des ressources")
+    pdf.p("Les entraînements ont été réalisés en Python (TensorFlow / Keras) sur Google Colab, avec "
+          "un GPU NVIDIA A100 (80 Go de mémoire GPU) dans un environnement à HAUTE MÉMOIRE "
+          "(High-RAM, 167 Go de RAM système). Cette configuration High-RAM a été nécessaire pour "
+          "entraîner le modèle de transfer learning EfficientNetB5 à haute résolution (456x456) sans "
+          "saturation de la mémoire. Le transfer learning emploie en outre la précision mixte "
+          "(float16) pour exploiter les Tensor Cores du GPU et accélérer l'entraînement.")
+    pdf.p("Point sur l'exécution. La grille des 36 configurations (modèles légers) s'entraîne en "
+          "quelques minutes ; à l'inverse, EfficientNetB5 -- le plus gros modèle -- sollicite "
+          "fortement le GPU (environ 18 minutes par époque en fine-tuning à 456x456). La capture "
+          "ci-dessous montre la consommation des ressources (RAM système, mémoire GPU, disque) "
+          "pendant l'exécution sur l'environnement A100 High-RAM.")
     pdf.fig("execution_resources.png",
             "Figure. Consommation des ressources sur Colab (A100, environnement High-RAM).",
             w=150, required=False)
 
     # 2. Données
-    pdf.h1("2. Comprehension et preparation des donnees")
-    pdf.h2("2.1 Jeu de donnees (Tache 1)")
+    pdf.h1("2. Compréhension et préparation des données")
+    pdf.h2("2.1 Jeu de données (Tâche 1)")
     pdf.p("CIFAR-10 : images couleur 32x32 (3 canaux RVB), 10 classes mutuellement exclusives.")
     if ds:
-        pdf.simple_table(["Caracteristique", "Valeur"],
-                         [["Images d'entrainement", f"{ds.get('n_train', 0):,}".replace(",", " ")],
+        pdf.simple_table(["Caractéristique", "Valeur"],
+                         [["Images d'entraînement", f"{ds.get('n_train', 0):,}".replace(",", " ")],
                           ["Images de test", f"{ds.get('n_test', 0):,}".replace(",", " ")],
                           ["Dimensions image", " x ".join(map(str, ds.get("image_shape", [])))],
                           ["Canaux", ds.get("n_channels", "?")], ["Classes", ds.get("n_classes", "?")]],
-                         [70, 50], caption="Table 1. Caracteristiques de CIFAR-10.")
-    pdf.p("50 000 images d'entrainement et 10 000 de test. La faible resolution rend la tache "
+                         [70, 50], caption="Table 1. Caractéristiques de CIFAR-10.")
+    pdf.p("50 000 images d'entraînement et 10 000 de test. La faible résolution rend la tâche "
           "difficile (classes proches : chat/chien, automobile/camion).")
-    pdf.h2("2.2 Visualisation (Tache 2)")
-    pdf.p("Les labels sont des donnees CATEGORIELLES (et non numeriques ordonnees) : chaque entier "
-          "de 0 a 9 designe une categorie (avion, automobile, ...), sans relation d'ordre entre "
-          "elles. Visuellement, la tres faible resolution (32x32) rend certaines images difficiles "
-          "a classer, y compris pour un humain -- notamment des classes proches comme chat / chien "
+    pdf.h2("2.2 Visualisation (Tâche 2)")
+    pdf.p("Les labels sont des données CATÉGORIELLES (et non numériques ordonnées) : chaque entier "
+          "de 0 à 9 désigne une catégorie (avion, automobile, ...), sans relation d'ordre entre "
+          "elles. Visuellement, la très faible résolution (32x32) rend certaines images difficiles "
+          "à classer, y compris pour un humain -- notamment des classes proches comme chat / chien "
           "ou automobile / camion.")
-    pdf.fig("samples.png", "Figure 1. Echantillon d'images CIFAR-10 et leurs classes.")
-    pdf.h2("2.3 Normalisation (Tache 3)")
-    pdf.p("Les pixels (0-255) sont ramenes dans [0,1] par division par 255. Cela place les entrees "
-          "sur une echelle commune, stabilise et accelere la descente de gradient.")
-    pdf.h2("2.4 Encodage one-hot (Tache 4)")
+    pdf.fig("samples.png", "Figure 1. Échantillon d'images CIFAR-10 et leurs classes.")
+    pdf.h2("2.3 Normalisation (Tâche 3)")
+    pdf.p("Les pixels (0-255) sont ramenés dans [0,1] par division par 255. Cela place les entrées "
+          "sur une échelle commune, stabilise et accélère la descente de gradient.")
+    pdf.h2("2.4 Encodage one-hot (Tâche 4)")
     pdf.p("Les labels deviennent des vecteurs one-hot (classe 3 -> [0,0,0,1,0,0,0,0,0,0]). Cela "
-          "evite toute relation d'ordre entre classes et s'accorde avec softmax + entropie croisee.")
-    pdf.h2("2.5 Distribution des classes (Tache 5)")
-    pdf.p("CIFAR-10 est equilibre : 5 000 images par classe. Un desequilibre biaiserait le modele.")
+          "évite toute relation d'ordre entre classes et s'accorde avec softmax + entropie croisée.")
+    pdf.h2("2.5 Distribution des classes (Tâche 5)")
+    pdf.p("CIFAR-10 est équilibré : 5 000 images par classe. Un déséquilibre biaiserait le modèle.")
     pdf.fig("class_distribution.png", "Figure 2. Distribution des classes (5 000 chacune).")
 
     # 3. Modélisation
-    pdf.h1("3. Modelisation : architectures, optimiseurs, regularisation")
+    pdf.h1("3. Modélisation : architectures, optimiseurs, régularisation")
     pdf.h2("3.1 Architectures")
     pdf.p("Les architectures de type VGG (Simonyan & Zisserman, 2014) empilent des blocs "
           "convolutifs identiques. Un bloc VGG = Conv -> Conv -> MaxPool (32 filtres 3x3, pooling "
-          "2x2) ; suit une couche cachee Dense(128) puis la sortie softmax(10). Six modeles :")
-    pdf.bullet("CNN1 : reseau de base (LeNet-5), reference.")
+          "2x2) ; suit une couche cachée Dense(128) puis la sortie softmax(10). Six modèles :")
+    pdf.bullet("CNN1 : réseau de base (LeNet-5), référence.")
     pdf.bullet("VGG1/2/3 : 1, 2 ou 3 blocs (profondeur croissante).")
     pdf.bullet("VGG3+Drop : VGG3 + Dropout.")
     pdf.bullet("VGG3+Drop+BatchNorm : VGG3 + Dropout + Batch Normalization.")
@@ -1074,53 +1074,53 @@ def build_report(results):
         blocks = {"CNN1": "-", "VGG1": "1", "VGG2": "2", "VGG3": "3", "VGG3+Drop": "3", "VGG3+Drop+BatchNorm": "3"}
         rows = [[ABBREV.get(m, m), blocks.get(m, "-"), f"{params[m]:,}".replace(",", " ") if params.get(m) else "?"]
                 for m in mo if m in params]
-        pdf.simple_table(["Modele", "Blocs VGG", "Parametres"], rows, [45, 35, 45],
-                         caption="Table 2. Nombre de parametres par architecture.")
+        pdf.simple_table(["Modèle", "Blocs VGG", "Paramètres"], rows, [45, 35, 45],
+                         caption="Table 2. Nombre de paramètres par architecture.")
     pdf.h2("3.2 Optimiseurs (SGD et Adam)")
-    pdf.p("Un optimiseur est l'algorithme qui ajuste les poids du reseau afin de minimiser la "
-          "fonction de perte. A chaque iteration, il exploite les gradients calcules par "
-          "retropropagation pour mettre a jour chaque poids dans la direction qui reduit l'erreur. "
-          "Son role est central : il determine la vitesse, la stabilite et la qualite finale de "
+    pdf.p("Un optimiseur est l'algorithme qui ajuste les poids du réseau afin de minimiser la "
+          "fonction de perte. À chaque itération, il exploite les gradients calculés par "
+          "rétropropagation pour mettre à jour chaque poids dans la direction qui réduit l'erreur. "
+          "Son rôle est central : il détermine la vitesse, la stabilité et la qualité finale de "
           "l'apprentissage.")
-    pdf.bullet("SGD (descente de gradient stochastique) met a jour chaque poids d'un pas fixe : "
+    pdf.bullet("SGD (descente de gradient stochastique) met à jour chaque poids d'un pas fixe : "
                "w <- w - lr x gradient. Simple et robuste, mais sensible au choix du learning rate "
-               "et plus lent ; le momentum (0,9) accumule les gradients passes pour accelerer et "
+               "et plus lent ; le momentum (0,9) accumule les gradients passés pour accélérer et "
                "lisser la trajectoire.")
     pdf.bullet("Adam (Adaptive Moment Estimation) combine le momentum (moyenne des gradients) et un "
-               "learning rate adaptatif par parametre (via la moyenne des carres des gradients) : "
+               "learning rate adaptatif par paramètre (via la moyenne des carrés des gradients) : "
                "w <- w - lr x m / (racine(v) + eps). Il converge plus vite et demande moins de "
-               "reglage, d'ou son statut de choix par defaut pour les CNN.")
+               "réglage, d'où son statut de choix par défaut pour les CNN.")
     pdf.p("Quel optimiseur pour l'architecture VGG ? L'analyse (section 4.3) le montre : Adam est le "
-          "plus performant a faible learning rate (0.001), mais il diverge a learning rate eleve, ou "
-          "SGD reste plus robuste. (Refs : Kingma & Ba, 2015 ; Analytics Vidhya, 2021.)")
-    pdf.h2("3.3 Regularisation : Dropout et Batch Normalization (Bonus)")
-    pdf.p("Dropout. Pendant l'entrainement, le Dropout desactive aleatoirement une fraction des "
-          "neurones (20 a 50 % ici) a chaque etape : le reseau ne peut plus dependre de neurones "
-          "specifiques et apprend des representations redondantes et robustes, ce qui reduit le "
-          "surapprentissage. Difference essentielle entre les deux phases : le Dropout n'agit qu'a "
-          "l'ENTRAINEMENT ; en INFERENCE, tous les neurones sont conserves et leurs sorties mises a "
-          "l'echelle de maniere coherente. (Ref : Srivastava et al., 2014.)")
+          "plus performant à faible learning rate (0.001), mais il diverge à learning rate élevé, où "
+          "SGD reste plus robuste. (Réfs : Kingma & Ba, 2015 ; Analytics Vidhya, 2021.)")
+    pdf.h2("3.3 Régularisation : Dropout et Batch Normalization (Bonus)")
+    pdf.p("Dropout. Pendant l'entraînement, le Dropout désactive aléatoirement une fraction des "
+          "neurones (20 à 50 % ici) à chaque étape : le réseau ne peut plus dépendre de neurones "
+          "spécifiques et apprend des représentations redondantes et robustes, ce qui réduit le "
+          "surapprentissage. Différence essentielle entre les deux phases : le Dropout n'agit qu'à "
+          "l'ENTRAÎNEMENT ; en INFÉRENCE, tous les neurones sont conservés et leurs sorties mises à "
+          "l'échelle de manière cohérente. (Réf : Srivastava et al., 2014.)")
     pdf.p("Batch Normalization. Elle normalise les activations de chaque couche au sein d'un "
-          "mini-batch (moyenne nulle, variance unitaire), puis les remet a l'echelle via deux "
-          "parametres appris. Objectifs et benefices : reduire le decalage de distribution interne "
-          "(covariate shift), ce qui stabilise et accelere l'entrainement, autorise des learning "
-          "rates plus eleves et exerce un leger effet regularisant. (Ref : Ioffe & Szegedy, 2015.)")
+          "mini-batch (moyenne nulle, variance unitaire), puis les remet à l'échelle via deux "
+          "paramètres appris. Objectifs et bénéfices : réduire le décalage de distribution interne "
+          "(covariate shift), ce qui stabilise et accélère l'entraînement, autorise des learning "
+          "rates plus élevés et exerce un léger effet régularisant. (Réf : Ioffe & Szegedy, 2015.)")
     pdf.h2("3.4 Protocole")
-    pdf.p(f"Entropie croisee categorielle, batch {cfg.get('batch_size', 64)}, max "
-          f"{cfg.get('max_epochs', 50)} epoques, early stopping. Trois learning rates (0.001, 0.01, "
-          "0.1) x deux optimiseurs ; LR fixe pendant chaque entrainement. Le test sert de validation.")
+    pdf.p(f"Entropie croisée catégorielle, batch {cfg.get('batch_size', 64)}, max "
+          f"{cfg.get('max_epochs', 50)} époques, early stopping. Trois learning rates (0.001, 0.01, "
+          "0.1) x deux optimiseurs ; LR fixe pendant chaque entraînement. Le test sert de validation.")
 
     # 4. Résultats
-    pdf.h1("4. Implementation et evaluation des performances")
-    pdf.h2("4.1 Tableau des performances (precision de test)")
+    pdf.h1("4. Implémentation et évaluation des performances")
+    pdf.h2("4.1 Tableau des performances (précision de test)")
 
     def acc(m, lr, o):
         r = lut.get((m, lr, o))
         return f"{r['test_accuracy']*100:.1f}" if r else "-"
-    pdf.grid_table(mo, lrs, opts, acc, "Precision test (%)", caption="Table 3. Precision de test (%).")
+    pdf.grid_table(mo, lrs, opts, acc, "Précision test (%)", caption="Table 3. Précision de test (%).")
     if bench:
         b = max(bench, key=lambda r: r["test_accuracy"])
-        tr = (f" (entrainement {b['train_accuracy']*100:.2f} %)"
+        tr = (f" (entraînement {b['train_accuracy']*100:.2f} %)"
               if b.get("train_accuracy") is not None else "")
         pdf.p(f"Meilleure configuration : {ABBREV.get(b['model'], b['model'])} / {b['optimizer']} / "
               f"LR={b['learning_rate']} -> {b['test_accuracy']*100:.2f} %{tr}.")
@@ -1130,19 +1130,19 @@ def build_report(results):
         def loss(m, lr, o):
             r = lut.get((m, lr, o))
             return f"{r['test_loss']:.2f}" if r and r.get("test_loss") is not None else "-"
-        pdf.grid_table(mo, lrs, opts, loss, "Perte test", caption="Table 4. Perte (entropie croisee).")
-    pdf.fig("comparison.png", "Figure 3. Precision de test (heatmap) : modeles x (learning rate, optimiseur).")
-    pdf.fig("accuracy_bars.png", "Figure 4. Precision de test par architecture et optimiseur (au meilleur learning rate).")
-    pdf.fig("lr_sensitivity.png", "Figure 5. Sensibilite de la precision au learning rate, par optimiseur.")
-    pdf.fig("train_test_gap.png", "Figure 6. Entrainement vs test : l'ecart mesure le sur-apprentissage.", required=False)
-    pdf.h2("4.3 Analyse des resultats")
+        pdf.grid_table(mo, lrs, opts, loss, "Perte test", caption="Table 4. Perte (entropie croisée).")
+    pdf.fig("comparison.png", "Figure 3. Précision de test (heatmap) : modèles x (learning rate, optimiseur).")
+    pdf.fig("accuracy_bars.png", "Figure 4. Précision de test par architecture et optimiseur (au meilleur learning rate).")
+    pdf.fig("lr_sensitivity.png", "Figure 5. Sensibilité de la précision au learning rate, par optimiseur.")
+    pdf.fig("train_test_gap.png", "Figure 6. Entraînement vs test : l'écart mesure le sur-apprentissage.", required=False)
+    pdf.h2("4.3 Analyse des résultats")
     for blk in _analysis_blocks(bench, lut, mo, lrs, opts):
         pdf.p(blk)
     blr = _best_lr(bench, lrs)
     has_curves = os.path.isdir(CURVES) and len(os.listdir(CURVES)) > 0
     if has_curves:
         pdf.h2(f"4.4 Courbes d'apprentissage (learning rate = {blr})")
-        pdf.p("Perte et precision (entrainement + test) pour chaque modele, sous SGD puis Adam.")
+        pdf.p("Perte et précision (entraînement + test) pour chaque modèle, sous SGD puis Adam.")
         i = 7
         for m in mo:
             for o in opts:
@@ -1152,41 +1152,41 @@ def build_report(results):
                     i += 1
 
     # 5. Modèle retenu (consigne)
-    pdf.h1("5. Modele retenu")
+    pdf.h1("5. Modèle retenu")
     if rm:
         if rm.get("_derived"):
-            pdf.p(f"Conformement a l'enonce, le modele retenu est la meilleure configuration de la "
+            pdf.p(f"Conformément à l'énoncé, le modèle retenu est la meilleure configuration de la "
                   f"comparaison : {ABBREV.get(rm['label'], rm['label'])} avec l'optimiseur "
                   f"{rm['optimizer']} et un learning rate de {rm['learning_rate']}, atteignant "
-                  f"{rm['test_accuracy']*100:.2f} % de precision sur le test. C'est donc l'architecture "
-                  "imposee la plus performante de l'etude.")
+                  f"{rm['test_accuracy']*100:.2f} % de précision sur le test. C'est donc l'architecture "
+                  "imposée la plus performante de l'étude.")
         else:
-            pdf.p(f"Conformement a l'enonce, le modele retenu est la meilleure configuration : "
+            pdf.p(f"Conformément à l'énoncé, le modèle retenu est la meilleure configuration : "
                   f"{ABBREV.get(rm['label'], rm['label'])} / {rm['optimizer']} / LR={rm['learning_rate']}, "
-                  "reentraine plus longtemps (n'utilise que les architectures imposees).")
+                  "réentraîné plus longtemps (n'utilise que les architectures imposées).")
         rows = [["Architecture", ABBREV.get(rm["label"], rm["label"])],
                 ["Optimiseur / LR", f"{rm['optimizer']} / {rm['learning_rate']}"],
-                ["Precision de test", f"{rm['test_accuracy']*100:.2f} %"]]
+                ["Précision de test", f"{rm['test_accuracy']*100:.2f} %"]]
         if rm.get("test_loss"):
             rows.append(["Perte de test", f"{rm['test_loss']:.3f}"])
         if rm.get("n_params"):
-            rows.append(["Parametres", f"{rm['n_params']:,}".replace(",", " ")])
+            rows.append(["Paramètres", f"{rm['n_params']:,}".replace(",", " ")])
         if rm.get("epochs_run"):
-            rows.append(["Epoques", f"{rm['epochs_run']} / {rm.get('epochs_max', '?')}"])
-        pdf.simple_table(["Indicateur", "Valeur"], rows, [70, 60], caption="Table 5. Modele retenu.")
-        pdf.p("A noter : meme reentraine longuement (jusqu'a 100 epoques), ce modele plafonne autour "
-              "de 84-85 %. Ce n'est pas un defaut d'entrainement mais une limite de CAPACITE : "
-              "l'architecture imposee est volontairement petite (blocs VGG a 32 filtres seulement, "
-              "~114 000 parametres). La precision d'entrainement et la precision de test restent "
-              "proches (autour de 85 %), ce qui indique une sous-capacite et non du surapprentissage : "
-              "le reseau atteint sa limite de representation. Au-dela, ce n'est plus le nombre "
-              "d'epoques qui compte mais la capacite du modele -- d'ou les extensions des sections 6 "
+            rows.append(["Époques", f"{rm['epochs_run']} / {rm.get('epochs_max', '?')}"])
+        pdf.simple_table(["Indicateur", "Valeur"], rows, [70, 60], caption="Table 5. Modèle retenu.")
+        pdf.p("À noter : même réentraîné longuement (jusqu'à 100 époques), ce modèle plafonne autour "
+              "de 84-85 %. Ce n'est pas un défaut d'entraînement mais une limite de CAPACITÉ : "
+              "l'architecture imposée est volontairement petite (blocs VGG à 32 filtres seulement, "
+              "~114 000 paramètres). La précision d'entraînement et la précision de test restent "
+              "proches (autour de 85 %), ce qui indique une sous-capacité et non du surapprentissage : "
+              "le réseau atteint sa limite de représentation. Au-delà, ce n'est plus le nombre "
+              "d'époques qui compte mais la capacité du modèle -- d'où les extensions des sections 6 "
               "et 7 (architecture plus large : 89.6 % ; transfer learning : 97.9 %).")
     else:
-        pdf.p("[Modele retenu a inserer apres entrainement.]")
-    pdf.fig("retained_curves.png", "Figure. Courbes du modele retenu.", required=False)
-    pdf.fig("retained_confusion.png", "Figure. Matrice de confusion du modele retenu (%).", required=False)
-    pdf.fig("retained_per_class.png", "Figure. Precision par classe du modele retenu.", required=False)
+        pdf.p("[Modèle retenu à insérer après entraînement.]")
+    pdf.fig("retained_curves.png", "Figure. Courbes du modèle retenu.", required=False)
+    pdf.fig("retained_confusion.png", "Figure. Matrice de confusion du modèle retenu (%).", required=False)
+    pdf.fig("retained_per_class.png", "Figure. Précision par classe du modèle retenu.", required=False)
     if rm and rm.get("per_class_accuracy"):
         pca = rm["per_class_accuracy"]; w = min(pca, key=pca.get); bc = max(pca, key=pca.get)
         pdf.p(f"Classe la mieux reconnue : {FR_NAMES.get(bc, bc)} ({pca[bc]*100:.1f} %) ; la plus "
@@ -1197,101 +1197,101 @@ def build_report(results):
         fname = fm.get("name", "")
         is_tl = ("transfer" in fname.lower() or "efficientnet" in fname.lower())
         if is_tl:
-            pdf.h1("6. Bonus 1 : transfer learning (modele plus leger)")
-            pdf.p(f"Premiere extension (hors enonce) par transfer learning : un reseau "
-                  f"{fname} pre-entraine sur ImageNet, dont les images CIFAR-10 sont agrandies "
-                  "puis le reseau affine. Backbone plus leger (entrainement rapide), deja tres "
-                  "performant grace au transfert de connaissances.")
-            cap = "Table 6. Modele transfer learning (leger)."
-            ftitle = "Modele transfer (leger)"
+            pdf.h1("6. Bonus 1 : transfer learning (modèle plus léger)")
+            pdf.p(f"Première extension (hors énoncé) par transfer learning : un réseau "
+                  f"{fname} pré-entraîné sur ImageNet, dont les images CIFAR-10 sont agrandies "
+                  "puis le réseau affiné. Backbone plus léger (entraînement rapide), déjà très "
+                  "performant grâce au transfert de connaissances.")
+            cap = "Table 6. Modèle transfer learning (léger)."
+            ftitle = "Modèle transfer (léger)"
         else:
-            pdf.h1("6. Bonus 1 : modele optimise (from-scratch)")
-            pdf.p("Premiere extension (hors enonce), entrainee de zero sans poids pre-entraines : un "
-                  "reseau plus profond (filtres croissants 64->128->256, Batch Normalization et Dropout "
-                  "systematiques, augmentation de donnees), qui ameliore la generalisation.")
-            cap = "Table 6. Modele optimise from-scratch."
-            ftitle = "Modele optimise"
+            pdf.h1("6. Bonus 1 : modèle optimisé (from-scratch)")
+            pdf.p("Première extension (hors énoncé), entraînée de zéro sans poids pré-entraînés : un "
+                  "réseau plus profond (filtres croissants 64->128->256, Batch Normalization et Dropout "
+                  "systématiques, augmentation de données), qui améliore la généralisation.")
+            cap = "Table 6. Modèle optimisé from-scratch."
+            ftitle = "Modèle optimisé"
         pdf.simple_table(["Indicateur", "Valeur"],
-                         [["Modele", fname or "-"],
-                          ["Precision de test", f"{fm['test_accuracy']*100:.2f} %"],
+                         [["Modèle", fname or "-"],
+                          ["Précision de test", f"{fm['test_accuracy']*100:.2f} %"],
                           ["Perte de test", f"{fm['test_loss']:.3f}"],
-                          ["Parametres", f"{fm['n_params']:,}".replace(",", " ")],
-                          ["Epoques", f"{fm['epochs_run']} / {fm.get('epochs_max', '?')}"]],
+                          ["Paramètres", f"{fm['n_params']:,}".replace(",", " ")],
+                          ["Époques", f"{fm['epochs_run']} / {fm.get('epochs_max', '?')}"]],
                          [70, 70], caption=cap)
-        pdf.p(f"Ce modele atteint {fm['test_accuracy']*100:.2f} %, au-dela des architectures imposees.")
+        pdf.p(f"Ce modèle atteint {fm['test_accuracy']*100:.2f} %, au-delà des architectures imposées.")
         pdf.fig("final_curves.png", f"Figure. Courbes ({ftitle}).")
         pdf.fig("confusion_matrix.png", f"Figure. Matrice de confusion ({ftitle}, %).")
-        pdf.fig("per_class_accuracy.png", f"Figure. Precision par classe ({ftitle}).")
-        pdf.fig("misclassified.png", "Figure. Exemples mal classes (V = reel, P = predit).")
+        pdf.fig("per_class_accuracy.png", f"Figure. Précision par classe ({ftitle}).")
+        pdf.fig("misclassified.png", "Figure. Exemples mal classés (V = réel, P = prédit).")
 
     # 7. Bonus 2 : transfer learning EfficientNetB5 (précision maximale)
     if tm:
-        pdf.h1("7. Bonus 2 : transfer learning (precision maximale)")
+        pdf.h1("7. Bonus 2 : transfer learning (précision maximale)")
         img = tm.get("img_size", 384)
-        pdf.p(f"Seconde extension visant la precision maximale : le transfer learning. Un reseau "
-              f"{tm.get('name', 'EfficientNet')} pre-entraine sur ImageNet est reutilise ; les images "
-              f"CIFAR-10 (32x32) sont agrandies a {img}x{img}, puis le reseau est affine en deux phases "
-              "(tete de classification, puis fine-tuning complet a faible learning rate, en mixed "
+        pdf.p(f"Seconde extension visant la précision maximale : le transfer learning. Un réseau "
+              f"{tm.get('name', 'EfficientNet')} pré-entraîné sur ImageNet est réutilisé ; les images "
+              f"CIFAR-10 (32x32) sont agrandies à {img}x{img}, puis le réseau est affiné en deux phases "
+              "(tête de classification, puis fine-tuning complet à faible learning rate, en mixed "
               "precision pour exploiter le GPU). Le transfert de connaissances depuis ImageNet permet "
-              "d'atteindre une precision nettement superieure aux modeles entraines de zero.")
+              "d'atteindre une précision nettement supérieure aux modèles entraînés de zéro.")
         pdf.simple_table(["Indicateur", "Valeur"],
-                         [["Modele", tm.get("name", "-")],
-                          ["Resolution d'entree", f"{img} x {img}"],
-                          ["Precision de test", f"{tm['test_accuracy']*100:.2f} %"],
+                         [["Modèle", tm.get("name", "-")],
+                          ["Résolution d'entrée", f"{img} x {img}"],
+                          ["Précision de test", f"{tm['test_accuracy']*100:.2f} %"],
                           ["Perte de test", f"{tm['test_loss']:.3f}"],
-                          ["Parametres", f"{tm['n_params']:,}".replace(",", " ")],
-                          ["Epoques (fine-tuning)", f"{tm['epochs_run']} / {tm.get('epochs_max', '?')}"]],
-                         [70, 75], caption="Table 7. Transfer learning (precision maximale).")
-        pdf.p(f"Ce modele atteint {tm['test_accuracy']*100:.2f} % de precision — le meilleur resultat "
+                          ["Paramètres", f"{tm['n_params']:,}".replace(",", " ")],
+                          ["Époques (fine-tuning)", f"{tm['epochs_run']} / {tm.get('epochs_max', '?')}"]],
+                         [70, 75], caption="Table 7. Transfer learning (précision maximale).")
+        pdf.p(f"Ce modèle atteint {tm['test_accuracy']*100:.2f} % de précision — le meilleur résultat "
               "du projet.")
-        pdf.fig("transfer_curves.png", "Figure. Courbes du modele transfer learning.", required=False)
+        pdf.fig("transfer_curves.png", "Figure. Courbes du modèle transfer learning.", required=False)
         pdf.fig("transfer_confusion.png", "Figure. Matrice de confusion (transfer learning, %).", required=False)
-        pdf.fig("transfer_per_class.png", "Figure. Precision par classe (transfer learning).", required=False)
-        pdf.fig("transfer_misclassified.png", "Figure. Exemples mal classes (transfer learning).", required=False)
+        pdf.fig("transfer_per_class.png", "Figure. Précision par classe (transfer learning).", required=False)
+        pdf.fig("transfer_misclassified.png", "Figure. Exemples mal classés (transfer learning).", required=False)
 
     # 8. ML Playground (déploiement) : mise à l'épreuve du modèle
-    pdf.h1("8. ML Playground : mise a l'epreuve du modele")
-    pdf.p("Phase de deploiement de la methodologie CRISP-DM : le modele de transfer learning "
-          "(section 7) est mis en production dans ML Playground, une application web developpee "
-          "pour le projet (backend FastAPI, frontend statique, deploiement Docker), accessible en "
-          "ligne sur https://machine-learning.bellahsene.org. L'interface est adaptee a la fois au "
+    pdf.h1("8. ML Playground : mise à l'épreuve du modèle")
+    pdf.p("Phase de déploiement de la méthodologie CRISP-DM : le modèle de transfer learning "
+          "(section 7) est mis en production dans ML Playground, une application web développée "
+          "pour le projet (backend FastAPI, frontend statique, déploiement Docker), accessible en "
+          "ligne sur https://machine-learning.bellahsene.org. L'interface est adaptée à la fois au "
           "web et au mobile.")
-    pdf.p("De l'entrainement a l'usage reel : le modele entraine et evalue sur Colab (sections 4 a "
-          "7) est sauvegarde au format Keras avec son pre-traitement integre au graphe "
+    pdf.p("De l'entraînement à l'usage réel : le modèle entraîné et évalué sur Colab (sections 4 à "
+          "7) est sauvegardé au format Keras avec son pré-traitement intégré au graphe "
           "(agrandissement 32x32 -> 456x456 et normalisation EfficientNet). L'application n'a donc "
-          "qu'a lui envoyer une image 32x32 brute : un backend FastAPI charge le modele et expose "
-          "une API de prediction, un frontend leger interroge cette API, et le tout est "
-          "conteneurise avec Docker puis deploye sur un serveur auto-heberge. La theorie -- "
+          "qu'à lui envoyer une image 32x32 brute : un backend FastAPI charge le modèle et expose "
+          "une API de prédiction, un frontend léger interroge cette API, et le tout est "
+          "conteneurisé avec Docker puis déployé sur un serveur auto-hébergé. La théorie -- "
           "courbes d'apprentissage, matrices de confusion -- devient ainsi un usage concret : "
-          "chaque clic des joueurs declenche une vraie inference du modele. Trois mini-jeux "
-          "mettent le modele a l'epreuve, chacun sous un angle different :")
+          "chaque clic des joueurs déclenche une vraie inférence du modèle. Trois mini-jeux "
+          "mettent le modèle à l'épreuve, chacun sous un angle différent :")
     pdf.bullet("Le Duel -- humain contre machine : 10 manches, 3 secondes par image pour choisir "
-               "la bonne classe parmi trois propositions ; l'IA repond en parallele a la meme "
-               "image et les scores sont compares en direct.")
-    pdf.bullet("Dessine, je devine : l'utilisateur dessine la classe imposee sur un canvas et le "
-               "modele devine en temps reel, trait apres trait. Parfois quelques bonnes couleurs "
-               "suffisent pour qu'il trouve ; parfois il faut etre plus artistique et pointu, car "
-               "un dessin est tres loin des photos 32x32 vues a l'entrainement.")
-    pdf.bullet("Test Ultime CINIC-10 : partie pensee pour le correcteur, qui teste le modele sur "
-               "des images generiques issues de CINIC-10 (derivees d'ImageNet) qu'il n'a JAMAIS "
-               "vues a l'entrainement. C'est l'epreuve la plus difficile : ces images ne suivent "
-               "pas toujours les memes criteres de categorisation que CIFAR-10, et l'enjeu est de "
-               "reperer quand le modele se trompe.")
+               "la bonne classe parmi trois propositions ; l'IA répond en parallèle à la même "
+               "image et les scores sont comparés en direct.")
+    pdf.bullet("Dessine, je devine : l'utilisateur dessine la classe imposée sur un canvas et le "
+               "modèle devine en temps réel, trait après trait. Parfois quelques bonnes couleurs "
+               "suffisent pour qu'il trouve ; parfois il faut être plus artistique et pointu, car "
+               "un dessin est très loin des photos 32x32 vues à l'entraînement.")
+    pdf.bullet("Test Ultime CINIC-10 : partie pensée pour le correcteur, qui teste le modèle sur "
+               "des images génériques issues de CINIC-10 (dérivées d'ImageNet) qu'il n'a JAMAIS "
+               "vues à l'entraînement. C'est l'épreuve la plus difficile : ces images ne suivent "
+               "pas toujours les mêmes critères de catégorisation que CIFAR-10, et l'enjeu est de "
+               "repérer quand le modèle se trompe.")
     pdf.fig("playground_home.png", "Figure. Screen du jeu.", w=170, required=False)
     pdf.fig("playground_duel_mobile.png", "Figure. Screen du jeu.", w=80, required=False)
-    pdf.p("L'application a tres bien fonctionne : etudiants, amis et famille l'ont testee et se "
-          "sont mis en defi les uns les autres, comme en temoignent les classements de la page "
+    pdf.p("L'application a très bien fonctionné : étudiants, amis et famille l'ont testée et se "
+          "sont mis au défi les uns les autres, comme en témoignent les classements de la page "
           "d'accueil. C'est aussi ce qui m'a fait le plus plaisir dans ce projet : voir "
-          "concretement le resultat de l'effort de la puce A100 -- un modele entraine pendant des "
-          "heures devenu un jeu que chacun peut defier depuis son navigateur ou son telephone.")
+          "concrètement le résultat de l'effort de la puce A100 -- un modèle entraîné pendant des "
+          "heures devenu un jeu que chacun peut défier depuis son navigateur ou son téléphone.")
 
     # 9. Conclusion
-    pdf.h1("9. Conclusion generale")
+    pdf.h1("9. Conclusion générale")
     for blk in _conclusion_blocks(bench, fm, rm, tm):
         pdf.p(blk)
 
     # 10. Références
-    pdf.h1("10. References")
+    pdf.h1("10. Références")
     for r in [
         "Simonyan, K. & Zisserman, A. (2014). Very Deep Convolutional Networks for Large-Scale "
         "Image Recognition (VGG). arXiv:1409.1556.",
