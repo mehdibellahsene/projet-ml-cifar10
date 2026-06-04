@@ -130,5 +130,16 @@ def reset_leaderboard(game: str | None = None, name: str | None = None,
     return {"ok": True, "reset": game or "all", "name": name}
 
 
+@app.patch("/api/leaderboard")
+def rename_player(old: str, new: str,
+                  x_reset_token: str | None = Header(default=None)):
+    """Renomme un pseudo dans tous les classements et l'historique.
+    Protege par le token LB_RESET_TOKEN."""
+    token = os.environ.get("LB_RESET_TOKEN")
+    if not token or x_reset_token != token:
+        raise HTTPException(status_code=403, detail="token invalide")
+    return {"ok": True, **lb.rename(old, new)}
+
+
 # Frontend statique monte en DERNIER pour ne pas masquer les routes /api et /healthz.
 app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="static")

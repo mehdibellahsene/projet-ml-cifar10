@@ -95,6 +95,23 @@ def all_top() -> dict:
     return {"duel": duel, "picto_fastest": fastest, "picto_by_cat": by_cat, "picto_history": history}
 
 
+def rename(old: str, new: str) -> dict:
+    """Renomme un pseudo (insensible a la casse) dans tous les classements
+    et l'historique. Retourne le nombre d'entrees touchees."""
+    key = _clean_name(old).lower()
+    new_c = _clean_name(new)
+    n = 0
+    with _lock:
+        d = _load()
+        for g in ("duel", "picto", "history"):
+            for e in d[g]:
+                if str(e.get("name", "")).strip().lower() == key:
+                    e["name"] = new_c
+                    n += 1
+        _save(d)
+    return {"renames": n}
+
+
 def submit(game: str, name: str, score=None, time=None, category=None, image=None) -> dict:
     if game not in ("duel", "picto"):
         raise ValueError("jeu inconnu")
