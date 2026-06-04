@@ -1279,6 +1279,15 @@ def build_report(results):
                "repérer quand le modèle se trompe.")
     pdf.fig("playground_home.png", "Figure. Screen du jeu.", w=170, required=False)
     pdf.fig("playground_duel_mobile.png", "Figure. Screen du jeu.", w=80, required=False)
+    pdf.p("Sur le jeu de dessin, le modèle est étonnamment bon : sur l'ensemble des dessins "
+          "devinés par le modèle (61 au moment de la rédaction), il lui faut en moyenne "
+          "7,1 secondes de dessin pour trouver -- médiane à 3,8 s, record à 0,77 s. Mais il lui "
+          "arrive aussi de se tromper : le coq dessiné ci-dessous a été pris pour un « avion » "
+          "avec 84 % de confiance. Rien d'étonnant : le modèle n'a jamais vu de dessins, "
+          "seulement des photos 32x32 -- qu'il s'en sorte aussi souvent est déjà une belle "
+          "preuve de généralisation.")
+    pdf.fig("picto_draw.png", "Figure. Screen du jeu.", w=75, required=False)
+    pdf.fig("picto_wrong.png", "Figure. Screen du jeu.", w=70, required=False)
     pdf.p("L'application a très bien fonctionné : étudiants, amis et famille l'ont testée et se "
           "sont mis au défi les uns les autres, comme en témoignent les classements de la page "
           "d'accueil. C'est aussi ce qui m'a fait le plus plaisir dans ce projet : voir "
