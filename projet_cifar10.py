@@ -966,7 +966,10 @@ def build_report(results):
     pdf.ln(7); pdf.f("", 10.5); pdf.set_text_color(*_BLACK)
     pdf.cell(0, 5, pdf.t("Application : https://machine-learning.bellahsene.org"), align="C",
              link="https://machine-learning.bellahsene.org")
-    pdf.ln(14); pdf.set_text_color(*_BLACK); pdf.f("B", 10.5)
+    pdf.ln(6)
+    pdf.cell(0, 5, pdf.t("Code source : https://github.com/mehdibellahsene/projet-ml-cifar10"), align="C",
+             link="https://github.com/mehdibellahsene/projet-ml-cifar10")
+    pdf.ln(13); pdf.set_text_color(*_BLACK); pdf.f("B", 10.5)
     pdf.cell(0, 6, pdf.t("Resume"), align="C"); pdf.ln(7)
     best_txt = ""
     if bench:
