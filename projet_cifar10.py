@@ -743,6 +743,26 @@ class _Report(FPDF):
         self.f("I", 8.5); self.set_text_color(*_BLACK)
         self.multi_cell(0, 4.4, self.t(cap), align="C"); self.ln(3)
 
+    def fig_pair(self, fn1, fn2, cap, w=55, gap=10):
+        """Deux figures cote a cote (meme largeur), legende commune centree."""
+        p1, p2 = (os.path.join(ASSETS, f) for f in (fn1, fn2))
+        if not (os.path.exists(p1) and os.path.exists(p2)):
+            return
+        try:
+            from PIL import Image as _IMG
+            h = max(w * _IMG.open(p).size[1] / _IMG.open(p).size[0] for p in (p1, p2))
+        except Exception:
+            h = w * 1.5
+        if self.get_y() + h + 9 > 278:
+            self.add_page()
+        x = (210 - (2 * w + gap)) / 2
+        y = self.get_y()
+        self.image(p1, x=x, y=y, w=w)
+        self.image(p2, x=x + w + gap, y=y, w=w)
+        self.set_y(y + h + 1.2)
+        self.f("I", 8.5); self.set_text_color(*_BLACK)
+        self.multi_cell(0, 4.4, self.t(cap), align="C"); self.ln(3)
+
     def _rule(self, y, wt=0.4):
         self.set_draw_color(*_BLACK); self.set_line_width(wt); self.line(22, y, 188, y)
 
@@ -1277,17 +1297,25 @@ def build_report(results):
                "vues à l'entraînement. C'est l'épreuve la plus difficile : ces images ne suivent "
                "pas toujours les mêmes critères de catégorisation que CIFAR-10, et l'enjeu est de "
                "repérer quand le modèle se trompe.")
-    pdf.fig("playground_home.png", "Figure. Screen du jeu.", w=170, required=False)
-    pdf.fig("playground_duel_mobile.png", "Figure. Screen du jeu.", w=80, required=False)
+    pdf.fig("playground_home.png",
+            "Figure. Page d'accueil de ML Playground : les trois mini-jeux et les classements des joueurs.",
+            w=170, required=False)
+    pdf.fig("playground_duel_mobile.png",
+            "Figure. Le Duel sur mobile : l'humain et l'IA répondent à la même image.",
+            w=80, required=False)
     pdf.p("Sur le jeu de dessin, le modèle est étonnamment bon : sur l'ensemble des dessins "
-          "devinés par le modèle (61 au moment de la rédaction), il lui faut en moyenne "
-          "7,1 secondes de dessin pour trouver -- médiane à 3,8 s, record à 0,77 s. Mais il lui "
+          "qu'il a devinés, il lui faut en moyenne 7,1 secondes de dessin pour trouver -- "
+          "médiane à 3,8 s, record à 0,77 s. Mais il lui "
           "arrive aussi de se tromper : le coq dessiné ci-dessous a été pris pour un « avion » "
           "avec 84 % de confiance. Rien d'étonnant : le modèle n'a jamais vu de dessins, "
           "seulement des photos 32x32 -- qu'il s'en sorte aussi souvent est déjà une belle "
           "preuve de généralisation.")
-    pdf.fig("picto_draw.png", "Figure. Screen du jeu.", w=75, required=False)
-    pdf.fig("picto_wrong.png", "Figure. Screen du jeu.", w=70, required=False)
+    pdf.fig_pair("picto_draw.png", "picto_wrong.png",
+                 "Figure. Dessine, je devine : le mot imposé à dessiner (gauche) ; "
+                 "un coq pris pour un « avion » à 84 % de confiance (droite).", w=55)
+    pdf.fig("picto_gallery.png",
+            "Figure. Mentions honorables : tous les dessins devinés par le modèle, avec la classe "
+            "trouvée et le temps de dessin.", w=170, required=False)
     pdf.p("L'application a très bien fonctionné : étudiants, amis et famille l'ont testée et se "
           "sont mis au défi les uns les autres, comme en témoignent les classements de la page "
           "d'accueil. C'est aussi ce qui m'a fait le plus plaisir dans ce projet : voir "
