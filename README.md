@@ -22,6 +22,25 @@ données jusqu'à une application web jouable.
 - Meilleure config « from scratch » retenue : VGG3 + Dropout + BatchNorm (**~85 %**).
 - **Transfer learning EfficientNetB5 : ~97,9 %** (modèle servi par l'application).
 
+## Résultats en images
+
+**Heatmap de la grille (36 configurations)** — précision de test par modèle,
+learning rate et optimiseur. La régularisation (Dropout + BatchNorm) domine,
+et les hachures rouges montrent les configurations qui divergent :
+
+![Heatmap de la grille](report_assets/comparison.png)
+
+**Sensibilité au learning rate** — Adam est excellent à 0.001 mais diverge
+au-delà ; SGD est plus lent mais robuste ; la BatchNorm stabilise tout :
+
+![Sensibilité au learning rate](report_assets/lr_sensitivity.png)
+
+**Matrice de confusion du modèle final (EfficientNetB5, ~97,9 %)** — quasi
+toute la masse sur la diagonale ; il ne reste que les confusions naturelles
+(chat/chien, automobile/camion) :
+
+![Matrice de confusion du modèle final](report_assets/transfer_confusion.png)
+
 ## L'application
 
 Trois mini-jeux qui tapent sur le modèle entraîné :
