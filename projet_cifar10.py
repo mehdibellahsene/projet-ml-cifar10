@@ -1314,8 +1314,8 @@ def build_report(results):
                  "Figure. Dessine, je devine : le mot imposé à dessiner (gauche) ; "
                  "un coq pris pour un « avion » à 84 % de confiance (droite).", w=55)
     pdf.fig("picto_gallery.png",
-            "Figure. Mentions honorables : tous les dessins devinés par le modèle, avec la classe "
-            "trouvée et le temps de dessin.", w=170, required=False)
+            "Figure. Mentions honorables : une partie des dessins devinés par le modèle, avec la "
+            "classe trouvée et le temps de dessin.", w=170, required=False)
     pdf.p("L'application a très bien fonctionné : étudiants, amis et famille l'ont testée et se "
           "sont mis au défi les uns les autres, comme en témoignent les classements de la page "
           "d'accueil. C'est aussi ce qui m'a fait le plus plaisir dans ce projet : voir "
